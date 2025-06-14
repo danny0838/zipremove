@@ -11,11 +11,18 @@ from test.test_zipfile.test_core import (
     requires_bz2,
     requires_lzma,
     requires_zlib,
-    requires_zstd,
     unlink,
 )
 
 import zipremove as zipfile
+
+# polyfills
+try:
+    from test.test_zipfile.test_core import requires_zstd
+except ImportError:
+    # polyfill for Python < 3.14
+    def requires_zstd(reason='requires zstd'):
+        return unittest.skip(reason)
 
 
 def ComparableZipInfo(zinfo):

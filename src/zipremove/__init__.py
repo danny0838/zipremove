@@ -21,6 +21,13 @@ from zipfile import (  # noqa: F401
     structFileHeader,
 )
 
+# polyfills
+try:
+    ZIP_ZSTANDARD
+except NameError:
+    # polyfill for Python < 3.14
+    ZIP_ZSTANDARD = 93
+
 
 class _ZipRepacker:
     """Class for ZipFile repacking."""
