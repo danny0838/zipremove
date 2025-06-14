@@ -91,12 +91,16 @@ with zipfile.ZipFile('archive.zip', 'a') as zh:
     zh.remove('file1')
     zh.remove('file2')
     zh.remove('file3')
+
+print(os.path.getsize('archive.zip'))  # 245
+
+with zipfile.ZipFile('archive.zip', 'a') as zh:
     zh.repack()
 
 print(os.path.getsize('archive.zip'))  # 116
 ```
 
-### Remove files under a directory and reclaim space
+### Remove files under a folder and reclaim space
 
 ```python
 import os
@@ -117,7 +121,7 @@ with zipfile.ZipFile('archive.zip', 'a') as zh:
 print(os.path.getsize('archive.zip'))  # 116
 ```
 
-### Rename files under a directory and reclaim space
+### Move files under a folder and reclaim space
 
 ```python
 import os
@@ -137,6 +141,10 @@ with zipfile.ZipFile('archive.zip', 'a') as zh:
             n2 = 'folder2/' + n[len('folder1/'):]
             zh.copy(n, n2)
             zh.remove(n)
+
+print(os.path.getsize('archive.zip'))  # 599
+
+with zipfile.ZipFile('archive.zip', 'a') as zh:
     zh.repack()
 
 print(os.path.getsize('archive.zip'))  # 446
