@@ -6,13 +6,18 @@ import unittest
 import unittest.mock as mock
 from tempfile import TemporaryFile
 from test.test_zipfile64 import _PRINT_WORKING_MSG_INTERVAL
-from test.test_zipfile.test_core import Unseekable
 
 import zipremove as zipfile
 
 from .test_zipfile import struct_pack_no_dd_sig
 
 # polyfills
+try:
+    from test.test_zipfile.test_core import Unseekable
+except ImportError:
+    # polyfill for Python < 3.12
+    from test.test_zipfile import Unseekable
+
 ENABLED_RESOURCES = set(os.environ.get("TEST_RESOURCES", "").split(","))
 
 def requires(resource_name):

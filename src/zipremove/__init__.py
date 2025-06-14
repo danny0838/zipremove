@@ -11,7 +11,6 @@ from zipfile import (  # noqa: F401
     _FH_GENERAL_PURPOSE_FLAG_BITS,
     _FH_SIGNATURE,
     _FH_UNCOMPRESSED_SIZE,
-    _MASK_USE_DATA_DESCRIPTOR,
     LZMADecompressor,
     _get_compressor,
     _get_decompressor,
@@ -27,6 +26,12 @@ try:
 except NameError:
     # polyfill for Python < 3.14
     ZIP_ZSTANDARD = 93
+
+try:
+    from zipfile import _MASK_USE_DATA_DESCRIPTOR
+except ImportError:
+    # polyfill for Python < 3.11
+    _MASK_USE_DATA_DESCRIPTOR = 1 << 3
 
 
 class _ZipRepacker:
@@ -211,14 +216,17 @@ class _ZipRepacker:
         zfile.start_dir -= entry_offset
         zfile._didModify = True
 
-        end_offset = zfile.start_dir
-        for zinfo in reversed(filelist):
-            if zinfo in removed_zinfos:
-                zinfo._end_offset = None
-            else:
-                if zinfo._end_offset is not None:
-                    zinfo._end_offset = end_offset
-                end_offset = zinfo.header_offset
+        # polyfill: update ZipInfo._end_offset if exists
+        # (Python >= 3.8 with fix #109858)
+        if hasattr(ZipInfo, '_end_offset'):
+            end_offset = zfile.start_dir
+            for zinfo in reversed(filelist):
+                if zinfo in removed_zinfos:
+                    zinfo._end_offset = None
+                else:
+                    if zinfo._end_offset is not None:
+                        zinfo._end_offset = end_offset
+                    end_offset = zinfo.header_offset
 
     def _calc_initial_entry_offset(self, fp, data_offset):
         checked_offsets = {}
@@ -302,7 +310,12 @@ class _ZipRepacker:
             return None
 
         try:
-            zinfo._decodeExtra(crc32(filename))  # parse zip64
+            # parse zip64
+            try:
+                zinfo._decodeExtra(crc32(filename))
+            except TypeError:
+                # polyfill for Python < 3.12
+                zinfo._decodeExtra()
         except BadZipFile:
             return None
 

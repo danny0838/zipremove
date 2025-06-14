@@ -2,27 +2,43 @@ import io
 import itertools
 import os
 import struct
+import sys
 import unittest
 import unittest.mock as mock
 import warnings
-from test.test_zipfile.test_core import (
-    TESTFN,
-    Unseekable,
-    requires_bz2,
-    requires_lzma,
-    requires_zlib,
-    unlink,
-)
 
 import zipremove as zipfile
 
 # polyfills
+try:
+    from test.test_zipfile.test_core import (
+        TESTFN,
+        Unseekable,
+        requires_bz2,
+        requires_lzma,
+        requires_zlib,
+        unlink,
+    )
+except ImportError:
+    # polyfill for Python < 3.12
+    from test.test_zipfile import (
+        TESTFN,
+        Unseekable,
+        requires_bz2,
+        requires_lzma,
+        requires_zlib,
+        unlink,
+    )
+
 try:
     from test.test_zipfile.test_core import requires_zstd
 except ImportError:
     # polyfill for Python < 3.14
     def requires_zstd(reason='requires zstd'):
         return unittest.skip(reason)
+
+def requires_zip64fix(reason='requires Python >= 3.11.4 for zip64 fix (#103861)'):
+    return unittest.skipUnless(sys.version_info >= (3, 11, 4), reason)
 
 
 def ComparableZipInfo(zinfo):
@@ -244,6 +260,7 @@ class AbstractRemoveTests(RepackHelperMixin):
             with zipfile.ZipFile(TESTFN) as zh:
                 self.assertIsNone(zh.testzip())
 
+    @requires_zip64fix()
     def test_remove_zip64(self):
         for i in range(0, 3):
             with self.subTest(i=i, filename=self.test_files[i][0]):
@@ -624,6 +641,7 @@ class AbstractRepackTests(RepackHelperMixin):
         with zipfile.ZipFile(TESTFN) as zh:
             self.assertIsNone(zh.testzip())
 
+    @requires_zip64fix()
     def test_repack_zip64(self):
         """Should correctly handle file entries with zip64."""
         for ii in ([0], [0, 1], [1], [2]):
@@ -688,6 +706,7 @@ class AbstractRepackTests(RepackHelperMixin):
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
 
+    @requires_zip64fix()
     def test_repack_data_descriptor_and_zip64(self):
         """Should correctly handle file entries using data descriptor and zip64."""
         for ii in ([0], [0, 1], [1], [2]):
@@ -844,6 +863,7 @@ class AbstractRepackTests(RepackHelperMixin):
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
 
+    @requires_zip64fix()
     def test_repack_data_descriptor_no_sig_and_zip64(self):
         """Should correctly handle file entries using data descriptor without signature and zip64."""
         for ii in ([0], [0, 1], [1], [2]):
