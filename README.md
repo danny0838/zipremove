@@ -54,6 +54,23 @@ This package extends `zipfile` with `remove`-related functionalities.
 
    Calling `repack` on a closed ZipFile will raise a `ValueError`.
 
+* `ZipFile.copy(zinfo_or_arcname, new_arcname[, chunk_size])`
+
+   Copies a member *zinfo_or_arcname* to *new_arcname* in the archive.
+   *zinfo_or_arcname* may be the full path of the member or a `ZipInfo`
+   instance.
+
+   *chunk_size* may be specified to control the buffer size when copying
+   entry data (default is 1 MiB).
+
+   The archive must be opened with mode ``'w'``, ``'x'`` or ``'a'``, and the
+   underlying stream must be seekable.
+
+   Returns the original version of the copied `ZipInfo` instance.
+
+   Calling `copy` on a closed ZipFile will raise a `ValueError`.
+
+
 ## Examples
 
 ### Remove files and reclaim space
@@ -98,4 +115,29 @@ with zipfile.ZipFile('archive.zip', 'a') as zh:
     zh.repack(zinfos)
 
 print(os.path.getsize('archive.zip'))  # 116
+```
+
+### Rename files under a directory and reclaim space
+
+```python
+import os
+import zipremove as zipfile
+
+with zipfile.ZipFile('archive.zip', 'w') as zh:
+    zh.writestr('file0', 'content0')
+    zh.writestr('folder1/file1', 'content1')
+    zh.writestr('folder1/file2', 'content2')
+    zh.writestr('folder1/file3', 'content3')
+
+print(os.path.getsize('archive.zip'))  # 446
+
+with zipfile.ZipFile('archive.zip', 'a') as zh:
+    for n in zh.namelist():
+        if n.startswith('folder1/'):
+            n2 = 'folder2/' + n[len('folder1/'):]
+            zh.copy(n, n2)
+            zh.remove(n)
+    zh.repack()
+
+print(os.path.getsize('archive.zip'))  # 446
 ```
