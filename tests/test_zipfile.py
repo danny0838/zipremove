@@ -1151,15 +1151,15 @@ class AbstractRepackTests(RepackHelperMixin):
         for ii in ([0], [1], [2]):
             with self.subTest(remove=ii):
                 self._prepare_zip_from_test_files(TESTFN, self.test_files)
-                with open(TESTFN, 'r+b') as fh:
-                    with zipfile.ZipFile(fh, 'a') as zh:
-                        zh.writestr('file.txt', b'dummy')
-                        for i in ii:
-                            zh.infolist()[i].file_size += 50
-                            zh.infolist()[i].compress_size += 50
+                with zipfile.ZipFile(TESTFN, 'a') as zh:
+                    zh._didModify = True
+                    for i in ii:
+                        zi = zh.infolist()[i]
+                        zi.compress_size += 1
+                        zi.file_size += 1
 
                 with zipfile.ZipFile(TESTFN, 'a') as zh:
-                    with self.assertRaises(zipfile.BadZipFile):
+                    with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
                         zh.repack()
 
     def test_repack_removed_basic(self):
@@ -1266,13 +1266,13 @@ class AbstractRepackTests(RepackHelperMixin):
                     self.assertIsNone(zh.testzip())
 
     def test_repack_removed_bad_removed_zinfos(self):
-        """Should raise when providing non-removed zinfos."""
+        """Should raise when providing non-removed ZipInfo objects."""
         for ii in ([0], [1], [2]):
             with self.subTest(removed=ii):
                 self._prepare_zip_from_test_files(TESTFN, self.test_files)
                 with zipfile.ZipFile(TESTFN, 'a') as zh:
                     zinfos = [zh.getinfo(self.test_files[i][0]) for i in ii]
-                    with self.assertRaises(zipfile.BadZipFile):
+                    with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
                         zh.repack(zinfos)
 
     def test_repack_removed_prepended_bytes(self):
