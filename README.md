@@ -43,8 +43,7 @@ This package extends `zipfile` with `remove`-related functionalities.
    unsigned data descriptor (deprecated in the latest ZIP specification and is
    only used by legacy tools) when checking for bytes resembling a valid local
    file entry.  This improves performance, but may cause some stale local file
-   entries to be preserved, as any entry using an unsigned descriptor cannot
-   be detected.
+   entries to be preserved.
 
    *chunk_size* may be specified to control the buffer size when moving
    entry data (default is 1 MiB).
