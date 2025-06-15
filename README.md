@@ -10,9 +10,8 @@ This package extends `zipfile` with `remove`-related functionalities.
    If multiple members share the same full path, only one is removed when
    a path is provided.
 
-   This does not physically remove the local file entry from the archive;
-   the ZIP file size remains unchanged. Call `ZipFile.repack` afterwards
-   to reclaim space.
+   This does not physically remove the local file entry from the archive.
+   Call `ZipFile.repack` afterwards to reclaim space.
 
    The archive must be opened with mode ``'w'``, ``'x'`` or ``'a'``.
 
@@ -73,7 +72,9 @@ This package extends `zipfile` with `remove`-related functionalities.
 
 ## Examples
 
-### Remove files and reclaim space
+### Remove entries and reclaim space
+
+Call `repack` after `remove`s to reclaim the space of the removed entries:
 
 ```python
 import os
@@ -91,37 +92,41 @@ with zipfile.ZipFile('archive.zip', 'a') as zh:
     zh.remove('file1')
     zh.remove('file2')
     zh.remove('file3')
-
-print(os.path.getsize('archive.zip'))  # 245
-
-with zipfile.ZipFile('archive.zip', 'a') as zh:
     zh.repack()
 
-print(os.path.getsize('archive.zip'))  # 116
+print(os.path.getsize('archive.zip'))  # 116 (would be 245 without `repack`)
 ```
 
-### Remove files under a folder and reclaim space
+Alternatively, pass the ZipInfo objects of the removed entries, for better
+performance and error-proofing:
 
 ```python
 import os
 import zipremove as zipfile
 
 with zipfile.ZipFile('archive.zip', 'w') as zh:
-    zh.writestr('file0', 'content0')
-    zh.writestr('folder/file1', 'content1')
-    zh.writestr('folder/file2', 'content2')
-    zh.writestr('folder/file3', 'content3')
+    zh.writestr('file1', 'content1')
+    zh.writestr('file2', 'content2')
+    zh.writestr('file3', 'content3')
+    zh.writestr('file4', 'content4')
 
-print(os.path.getsize('archive.zip'))  # 440
+print(os.path.getsize('archive.zip'))  # 398
 
 with zipfile.ZipFile('archive.zip', 'a') as zh:
-    zinfos = [zh.remove(n) for n in zh.namelist() if n.startswith('folder/')]
+    zinfos = []
+    zinfos.append(zh.remove('file1'))
+    zinfos.append(zh.remove('file2'))
+    zinfos.append(zh.remove('file3'))
     zh.repack(zinfos)
 
-print(os.path.getsize('archive.zip'))  # 116
+print(os.path.getsize('archive.zip'))  # 116 (would be 245 without `repack`)
 ```
 
-### Move files under a folder and reclaim space
+### Move entries under a folder and reclaim space
+
+Moving entries in a ZIP file must be done as a combination of `copy`, `remove`,
+and optionally `repack`, because every local file entry contains the filename
+and requires rewriting.
 
 ```python
 import os
@@ -141,11 +146,33 @@ with zipfile.ZipFile('archive.zip', 'a') as zh:
             n2 = 'folder2/' + n[len('folder1/'):]
             zh.copy(n, n2)
             zh.remove(n)
-
-print(os.path.getsize('archive.zip'))  # 599
-
-with zipfile.ZipFile('archive.zip', 'a') as zh:
     zh.repack()
 
+print(os.path.getsize('archive.zip'))  # 446 (would be 599 without `repack`)
+```
+
+Similarly, pass the ZipInfo objects of the copied/removed entries for better
+performance and error-proofing:
+
+```python
+import os
+import zipremove as zipfile
+
+with zipfile.ZipFile('archive.zip', 'w') as zh:
+    zh.writestr('file0', 'content0')
+    zh.writestr('folder1/file1', 'content1')
+    zh.writestr('folder1/file2', 'content2')
+    zh.writestr('folder1/file3', 'content3')
+
 print(os.path.getsize('archive.zip'))  # 446
+
+with zipfile.ZipFile('archive.zip', 'a') as zh:
+    zinfos = []
+    for n in zh.namelist():
+        if n.startswith('folder1/'):
+            n2 = 'folder2/' + n[len('folder1/'):]
+            zinfos.append(zh.remove(zh.copy(n, n2)))
+    zh.repack(zinfos)
+
+print(os.path.getsize('archive.zip'))  # 446 (would be 599 without `repack`)
 ```
