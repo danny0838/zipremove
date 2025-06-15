@@ -1373,6 +1373,227 @@ class LzmaRepackTests(AbstractRepackTests, unittest.TestCase):
 class ZstdRepackTests(AbstractRepackTests, unittest.TestCase):
     compression = zipfile.ZIP_ZSTANDARD
 
+class OtherRepackTests(unittest.TestCase):
+    def test_full_overlap_different_names(self):
+        # see `test_full_overlap_different_names` in built-in test.test_zipfile
+        data = (
+            b'PK\x03\x04\x14\x00\x00\x00\x08\x00\xa0lH\x05\xe2\x1e'
+            b'8\xbb\x10\x00\x00\x00\t\x04\x00\x00\x01\x00\x00\x00b\xed'
+            b'\xc0\x81\x08\x00\x00\x00\xc00\xd6\xfbK\\d\x0b`P'
+            b'K\x01\x02\x14\x00\x14\x00\x00\x00\x08\x00\xa0lH\x05\xe2'
+            b'\x1e8\xbb\x10\x00\x00\x00\t\x04\x00\x00\x01\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00aPK'
+            b'\x01\x02\x14\x00\x14\x00\x00\x00\x08\x00\xa0lH\x05\xe2\x1e'
+            b'8\xbb\x10\x00\x00\x00\t\x04\x00\x00\x01\x00\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00bPK\x05'
+            b'\x06\x00\x00\x00\x00\x02\x00\x02\x00^\x00\x00\x00/\x00\x00'
+            b'\x00\x00\x00'
+        )
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
+                zh.repack()
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            zi = zh.remove('a')
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
+                zh.repack([zi])
+
+        # local entry of 'a' should not be stripped (not found)
+        fz = io.BytesIO(data)
+        with zipfile.ZipFile(fz, 'a') as zh:
+            zh.remove('a')
+            zh.repack()
+
+        expected = (
+            b'PK\x03\x04\x14\x00\x00\x00\x08\x00\xa0lH\x05\xe2\x1e'
+            b'8\xbb\x10\x00\x00\x00\t\x04\x00\x00\x01\x00\x00\x00b\xed'
+            b'\xc0\x81\x08\x00\x00\x00\xc00\xd6\xfbK\\d\x0b`P'
+            b'K\x01\x02\x14\x00\x14\x00\x00\x00\x08\x00\xa0lH\x05\xe2'
+            b'\x1e8\xbb\x10\x00\x00\x00\t\x04\x00\x00\x01\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00b'
+            b'PK\x05\x06\x00\x00\x00\x00\x01\x00\x01\x00/\x00\x00\x00/\x00'
+            b'\x00\x00\x00\x00'
+        )
+        fz.seek(0)
+        self.assertEqual(fz.read(), expected)
+
+    def test_quoted_overlap(self):
+        # see `test_quoted_overlap` in built-in test.test_zipfile
+        data = (
+            b'PK\x03\x04\x14\x00\x00\x00\x08\x00\xa0lH\x05Y\xfc'
+            b'8\x044\x00\x00\x00(\x04\x00\x00\x01\x00\x00\x00a\x00'
+            b'\x1f\x00\xe0\xffPK\x03\x04\x14\x00\x00\x00\x08\x00\xa0l'
+            b'H\x05\xe2\x1e8\xbb\x10\x00\x00\x00\t\x04\x00\x00\x01\x00'
+            b'\x00\x00b\xed\xc0\x81\x08\x00\x00\x00\xc00\xd6\xfbK\\'
+            b'd\x0b`PK\x01\x02\x14\x00\x14\x00\x00\x00\x08\x00\xa0'
+            b'lH\x05Y\xfc8\x044\x00\x00\x00(\x04\x00\x00\x01'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+            b'\x00aPK\x01\x02\x14\x00\x14\x00\x00\x00\x08\x00\xa0l'
+            b'H\x05\xe2\x1e8\xbb\x10\x00\x00\x00\t\x04\x00\x00\x01\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00$\x00\x00\x00'
+            b'bPK\x05\x06\x00\x00\x00\x00\x02\x00\x02\x00^\x00\x00'
+            b'\x00S\x00\x00\x00\x00\x00'
+        )
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
+                zh.repack()
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            zi = zh.remove('a')
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
+                zh.repack([zi])
+
+        # local entry of 'a' should not be stripped (no valid entry)
+        fz = io.BytesIO(data)
+        with zipfile.ZipFile(fz, 'a') as zh:
+            zh.remove('a')
+            zh.repack()
+
+        expected = (
+            b'PK\x03\x04\x14\x00\x00\x00\x08\x00\xa0lH\x05Y\xfc'
+            b'8\x044\x00\x00\x00(\x04\x00\x00\x01\x00\x00\x00a\x00'
+            b'\x1f\x00\xe0\xffPK\x03\x04\x14\x00\x00\x00\x08\x00\xa0l'
+            b'H\x05\xe2\x1e8\xbb\x10\x00\x00\x00\t\x04\x00\x00\x01\x00'
+            b'\x00\x00b\xed\xc0\x81\x08\x00\x00\x00\xc00\xd6\xfbK\\'
+            b'd\x0b`PK\x01\x02\x14\x00\x14\x00\x00\x00\x08\x00\xa0l'
+            b'H\x05\xe2\x1e8\xbb\x10\x00\x00\x00\t\x04\x00\x00\x01\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00$\x00\x00\x00'
+            b'bPK\x05\x06\x00\x00\x00\x00\x01\x00\x01\x00/\x00\x00'
+            b'\x00S\x00\x00\x00\x00\x00'
+        )
+        fz.seek(0)
+        self.assertEqual(fz.read(), expected)
+
+    def test_partial_overlap_at_dd(self):
+        # file 'a' has an unsigned data descriptor (whose information isn't
+        # consistent with in central directory) that starts at the starting
+        # position of file 'b'
+        data = (
+            b'PK\x03\x04\x14\x00\x08\x00\x00\x00\x00\x00!\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00acontent'
+            b'PK\x03\x04\x14\x00\x00\x00\x00\x00\x00\x00!\x00\xa90\xc5\xfe'
+            b'\x07\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00bcontent'
+            b'PK\x01\x02\x14\x00\x14\x00\x08\x00\x00\x00\x00\x00!\x00'
+            b'\xa90\xc5\xfe\x07\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x80\x01\x00\x00\x00\x00a'
+            b'PK\x01\x02\x14\x00\x14\x00\x00\x00\x00\x00\x00\x00!\x00'
+            b'\xa90\xc5\xfe\x07\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x80\x01&\x00\x00\x00b'
+            b'PK\x05\x06\x00\x00\x00\x00\x02\x00\x02\x00^\x00\x00\x00L\x00'
+            b'\x00\x00\x00\x00'
+        )
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            zi = zh.getinfo('a')
+            self.assertEqual(zi.header_offset, 0)
+            self.assertEqual(zi.compress_size, 7)
+            self.assertEqual(zi.file_size, 7)
+            self.assertEqual(zi.flag_bits, 8)
+            zi = zh.getinfo('b')
+            self.assertEqual(zi.header_offset, 38)
+            self.assertEqual(zi.compress_size, 7)
+            self.assertEqual(zi.file_size, 7)
+            self.assertEqual(zi.flag_bits, 0)
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
+                zh.repack()
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            zi = zh.remove('a')
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
+                zh.repack([zi])
+
+        # local entry of 'a' should not be stripped (no valid entry)
+        fz = io.BytesIO(data)
+        with zipfile.ZipFile(fz, 'a') as zh:
+            zh.remove('a')
+            zh.repack()
+
+        expected = (
+            b'PK\x03\x04\x14\x00\x08\x00\x00\x00\x00\x00!\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00acontent'
+            b'PK\x03\x04\x14\x00\x00\x00\x00\x00\x00\x00!\x00\xa90\xc5\xfe'
+            b'\x07\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00bcontent'
+            b'PK\x01\x02\x14\x00\x14\x00\x00\x00\x00\x00\x00\x00!\x00'
+            b'\xa90\xc5\xfe\x07\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x80\x01&\x00\x00\x00b'
+            b'PK\x05\x06\x00\x00\x00\x00\x01\x00\x01\x00/\x00\x00\x00L\x00'
+            b'\x00\x00\x00\x00'
+        )
+        fz.seek(0)
+        self.assertEqual(fz.read(), expected)
+
+    def test_overlap_with_central_dir(self):
+        # see `test_overlap_with_central_dir` in built-in test.test_zipfile
+        data = (
+            b'PK\x01\x02\x14\x03\x14\x00\x00\x00\x08\x00G_|Z'
+            b'\xe2\x1e8\xbb\x0b\x00\x00\x00\t\x04\x00\x00\x01\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\xb4\x81\x00\x00\x00\x00aP'
+            b'K\x05\x06\x00\x00\x00\x00\x01\x00\x01\x00/\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00'
+        )
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Bad magic number for file header'):
+                zh.repack()
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            zi = zh.remove('a')
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Bad magic number for file header'):
+                zh.repack([zi])
+
+        # local entry of 'a' should not be stripped (not found)
+        fz = io.BytesIO(data)
+        with zipfile.ZipFile(fz, 'a') as zh:
+            zh.remove('a')
+            zh.repack()
+
+        expected = (
+            b'PK\x05\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00'
+        )
+        fz.seek(0)
+        self.assertEqual(fz.read(), expected)
+
+    def test_overlap_with_archive_comment(self):
+        # see `test_overlap_with_archive_comment` in built-in test.test_zipfile
+        data = (
+            b'PK\x01\x02\x14\x03\x14\x00\x00\x00\x08\x00G_|Z'
+            b'\xe2\x1e8\xbb\x0b\x00\x00\x00\t\x04\x00\x00\x01\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\xb4\x81E\x00\x00\x00aP'
+            b'K\x05\x06\x00\x00\x00\x00\x01\x00\x01\x00/\x00\x00\x00\x00'
+            b'\x00\x00\x00*\x00'
+            b'PK\x03\x04\x14\x00\x00\x00\x08\x00G_|Z\xe2\x1e'
+            b'8\xbb\x0b\x00\x00\x00\t\x04\x00\x00\x01\x00\x00\x00aK'
+            b'L\x1c\x05\xa3`\x14\x8cx\x00\x00'
+        )
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
+                zh.repack()
+
+        with zipfile.ZipFile(io.BytesIO(data), 'a') as zh:
+            zi = zh.remove('a')
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
+                zh.repack([zi])
+
+        # local entry of 'a' should not be stripped (not found)
+        fz = io.BytesIO(data)
+        with zipfile.ZipFile(fz, 'a') as zh:
+            zh.remove('a')
+            zh.repack()
+
+        expected = (
+            b'PK\x05\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+            b'\x00\x00\x00*\x00'
+            b'PK\x03\x04\x14\x00\x00\x00\x08\x00G_|Z\xe2\x1e'
+            b'8\xbb\x0b\x00\x00\x00\t\x04\x00\x00\x01\x00\x00\x00aK'
+            b'L\x1c\x05\xa3`\x14\x8cx\x00\x00'
+        )
+        fz.seek(0)
+        self.assertEqual(fz.read(), expected)
+
 class ZipRepackerTests(unittest.TestCase):
     def test_iter_scan_signature(self):
         bytes_ = b'sig__sig__sig__sig'
