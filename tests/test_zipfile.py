@@ -1265,8 +1265,32 @@ class AbstractRepackTests(RepackHelperMixin):
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
 
-    def test_repack_removed_bad_removed_zinfos(self):
-        """Should raise when providing non-removed ZipInfo objects."""
+    def test_repack_removed_bad_header_offset(self):
+        """Should raise when provided ZipInfo objects has differing header offset."""
+        for ii in ([0], [1], [2]):
+            with self.subTest(removed=ii):
+                self._prepare_zip_from_test_files(TESTFN, self.test_files)
+                with zipfile.ZipFile(TESTFN, 'a') as zh:
+                    zinfos = [zh.remove(self.test_files[i][0]) for i in ii]
+                    for zi in zinfos:
+                        zi.header_offset += 1
+                    with self.assertRaisesRegex(zipfile.BadZipFile, 'Bad magic number for file header'):
+                        zh.repack(zinfos)
+
+    def test_repack_removed_bad_header_offset2(self):
+        """Should raise when provided ZipInfo objects has differing header offset."""
+        for ii in ([1], [2]):
+            with self.subTest(removed=ii):
+                self._prepare_zip_from_test_files(TESTFN, self.test_files)
+                with zipfile.ZipFile(TESTFN, 'a') as zh:
+                    zinfos = [zh.remove(self.test_files[i][0]) for i in ii]
+                    for zi in zinfos:
+                        zi.header_offset -= 1
+                    with self.assertRaisesRegex(zipfile.BadZipFile, 'Overlapped entries'):
+                        zh.repack(zinfos)
+
+    def test_repack_removed_bad_non_removed(self):
+        """Should raise when provided ZipInfo objects are not removed."""
         for ii in ([0], [1], [2]):
             with self.subTest(removed=ii):
                 self._prepare_zip_from_test_files(TESTFN, self.test_files)
