@@ -1107,6 +1107,46 @@ class AbstractRepackTests(RepackHelperMixin):
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
 
+    def test_repack_prepended_bytes(self):
+        for ii in ([], [0], [0, 1], [1], [2]):
+            with self.subTest(remove=ii):
+                # calculate the expected results
+                test_files = [data for j, data in enumerate(self.test_files) if j not in ii]
+                fz = io.BytesIO()
+                self._prepare_zip_from_test_files(fz, test_files)
+                fz.seek(0)
+                with open(TESTFN, 'wb') as fh:
+                    fh.write(b'dummy ')
+                    fh.write(fz.read())
+                with zipfile.ZipFile(TESTFN) as zh:
+                    expected_zinfos = [ComparableZipInfo(zi) for zi in zh.infolist()]
+                expected_size = os.path.getsize(TESTFN)
+
+                # do the removal and check the result
+                fz = io.BytesIO()
+                self._prepare_zip_from_test_files(fz, self.test_files)
+                fz.seek(0)
+                with open(TESTFN, 'wb') as fh:
+                    fh.write(b'dummy ')
+                    fh.write(fz.read())
+                with zipfile.ZipFile(TESTFN, 'a', self.compression) as zh:
+                    for i in ii:
+                        zh.remove(self.test_files[i][0])
+                    zh.repack()
+
+                    # check infolist
+                    self.assertEqual(
+                        [ComparableZipInfo(zi) for zi in zh.infolist()],
+                        expected_zinfos,
+                    )
+
+                # check file size
+                self.assertEqual(os.path.getsize(TESTFN), expected_size)
+
+                # make sure the zip file is still valid
+                with zipfile.ZipFile(TESTFN) as zh:
+                    self.assertIsNone(zh.testzip())
+
     def test_repack_overlapping_blocks(self):
         for ii in ([0], [1], [2]):
             with self.subTest(remove=ii):
@@ -1234,6 +1274,45 @@ class AbstractRepackTests(RepackHelperMixin):
                     zinfos = [zh.getinfo(self.test_files[i][0]) for i in ii]
                     with self.assertRaises(zipfile.BadZipFile):
                         zh.repack(zinfos)
+
+    def test_repack_removed_prepended_bytes(self):
+        for ii in ([], [0], [0, 1], [1], [2]):
+            with self.subTest(remove=ii):
+                # calculate the expected results
+                test_files = [data for j, data in enumerate(self.test_files) if j not in ii]
+                fz = io.BytesIO()
+                self._prepare_zip_from_test_files(fz, test_files)
+                fz.seek(0)
+                with open(TESTFN, 'wb') as fh:
+                    fh.write(b'dummy ')
+                    fh.write(fz.read())
+                with zipfile.ZipFile(TESTFN) as zh:
+                    expected_zinfos = [ComparableZipInfo(zi) for zi in zh.infolist()]
+                expected_size = os.path.getsize(TESTFN)
+
+                # do the removal and check the result
+                fz = io.BytesIO()
+                self._prepare_zip_from_test_files(fz, self.test_files)
+                fz.seek(0)
+                with open(TESTFN, 'wb') as fh:
+                    fh.write(b'dummy ')
+                    fh.write(fz.read())
+                with zipfile.ZipFile(TESTFN, 'a', self.compression) as zh:
+                    zinfos = [zh.remove(self.test_files[i][0]) for i in ii]
+                    zh.repack(zinfos)
+
+                    # check infolist
+                    self.assertEqual(
+                        [ComparableZipInfo(zi) for zi in zh.infolist()],
+                        expected_zinfos,
+                    )
+
+                # check file size
+                self.assertEqual(os.path.getsize(TESTFN), expected_size)
+
+                # make sure the zip file is still valid
+                with zipfile.ZipFile(TESTFN) as zh:
+                    self.assertIsNone(zh.testzip())
 
     @mock.patch.object(zipfile, '_ZipRepacker')
     def test_repack_closed(self, m_repack):
