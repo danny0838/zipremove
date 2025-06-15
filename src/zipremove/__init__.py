@@ -192,7 +192,8 @@ class _ZipRepacker:
             # may raise on an invalid local file header
             used_entry_size = sum(self._calc_local_file_entry_size(fp, zinfo))
 
-            self._debug(3, i, zinfo.orig_filename, zinfo.header_offset, entry_size, used_entry_size)
+            self._debug(3, 'entry:', i, zinfo.orig_filename,
+                        zinfo.header_offset, entry_size, used_entry_size)
             if used_entry_size > entry_size:
                 raise BadZipFile(
                     f"Overlapped entries: {zinfo.orig_filename!r} ")
