@@ -1028,7 +1028,7 @@ class AbstractRepackTests(RepackHelperMixin):
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
 
-    def test_repack_data_descriptor_no_sig_strict_by_decompressoin(self):
+    def test_repack_data_descriptor_no_sig_strict_by_decompression(self):
         """Should correctly handle file entries using data descriptor without signature
         through decompression."""
         if self.compression in (zipfile.ZIP_STORED, zipfile.ZIP_LZMA):
