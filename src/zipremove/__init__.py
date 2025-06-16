@@ -228,7 +228,7 @@ class _ZipRepacker:
                     fp,
                     old_header_offset + used_entry_size,
                     zinfo.header_offset,
-                    entry_size - used_entry_size
+                    entry_size - used_entry_size,
                 )
 
                 # update entry_offset for subsequent files to follow
@@ -236,7 +236,12 @@ class _ZipRepacker:
 
             else:
                 if entry_offset > 0:
-                    self._copy_bytes(fp, old_header_offset, zinfo.header_offset, used_entry_size)
+                    self._copy_bytes(
+                        fp,
+                        old_header_offset,
+                        zinfo.header_offset,
+                        used_entry_size,
+                    )
 
                 if used_entry_size < entry_size:
                     stale_entry_size = self._validate_local_file_entry_sequence(
@@ -280,7 +285,8 @@ class _ZipRepacker:
             self._debug(3, 'scanning file signatures before:', data_offset)
             for pos in self._iter_scan_signature(fp, stringFileHeader, 0, data_offset):
                 self._debug(3, 'checking file signature at:', pos)
-                entry_size = self._validate_local_file_entry_sequence(fp, pos, data_offset, checked_offsets)
+                entry_size = self._validate_local_file_entry_sequence(
+                    fp, pos, data_offset, checked_offsets)
                 if entry_size == data_offset - pos:
                     return entry_size
         return 0
