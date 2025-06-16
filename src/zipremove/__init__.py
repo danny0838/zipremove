@@ -378,14 +378,11 @@ class _ZipRepacker:
             zip64 = fheader[_FH_UNCOMPRESSED_SIZE] == 0xffffffff
 
             dd = self._scan_data_descriptor(fp, pos, end_offset, zip64)
-            if dd is None:
+            if dd is None and not self.strict_descriptor:
                 dd = self._scan_data_descriptor_no_sig_by_decompression(
                     fp, pos, end_offset, zip64, fheader[_FH_COMPRESSION_METHOD])
                 if dd is False:
-                    if not self.strict_descriptor:
-                        dd = self._scan_data_descriptor_no_sig(fp, pos, end_offset, zip64)
-                    else:
-                        dd = None
+                    dd = self._scan_data_descriptor_no_sig(fp, pos, end_offset, zip64)
             if dd is None:
                 return None
 
