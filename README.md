@@ -1,3 +1,9 @@
+![PyPI version](https://img.shields.io/pypi/v/zipremove.svg)
+![Python Versions](https://img.shields.io/pypi/pyversions/zipremove)
+![Status](https://img.shields.io/pypi/status/zipremove)
+![License](https://img.shields.io/github/license/danny0838/zipremove)
+[![Downloads](https://static.pepy.tech/personalized-badge/zipremove?period=month&left_text=Downloads)](https://pepy.tech/project/zipremove)
+
 This package extends `zipfile` with `remove`-related functionalities.
 
 ## API
