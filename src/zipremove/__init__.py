@@ -3,7 +3,8 @@ import io
 import os
 import struct
 from zipfile import *
-from zipfile import (  # noqa: F401
+from zipfile import _get_compressor  # noqa: F401
+from zipfile import (
     _DD_SIGNATURE,
     _FH_COMPRESSED_SIZE,
     _FH_COMPRESSION_METHOD,
@@ -14,7 +15,6 @@ from zipfile import (  # noqa: F401
     _FH_SIGNATURE,
     _FH_UNCOMPRESSED_SIZE,
     LZMADecompressor,
-    _get_compressor,
     _get_decompressor,
     crc32,
     sizeFileHeader,
