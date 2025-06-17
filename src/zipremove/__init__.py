@@ -3,6 +3,7 @@ import io
 import os
 import struct
 from zipfile import *
+from zipfile import __all__  # noqa: F401
 from zipfile import _get_compressor  # noqa: F401
 from zipfile import (
     _DD_SIGNATURE,
