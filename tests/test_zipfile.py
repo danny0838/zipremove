@@ -1623,136 +1623,177 @@ class ZipRepackerTests(unittest.TestCase):
 
     def test_scan_data_descriptor(self):
         repacker = zipfile._ZipRepacker()
-        SIG = zipfile._DD_SIGNATURE
+
+        sig = zipfile._DD_SIGNATURE
+        raw_bytes = comp_bytes = b'dummy'
+        raw_len = comp_len = len(raw_bytes)
+        raw_crc = zipfile.crc32(raw_bytes)
 
         # basic
-        bytes_ = b'dummy' + struct.pack('<4L', SIG, 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<4L', sig, raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), False),
-            (0x4ff4f23f, 5, 5, 16),
+            (raw_crc, comp_len, raw_len, 16),
         )
 
         # return None if no signature
-        bytes_ = b'dummy' + struct.pack('<3L', 0x4ff4f23f, 5, 5)
-        self.assertEqual(
-            repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), False),
-            None,
-        )
-
-        # return None if not unpackable
-        bytes_ = struct.pack('<L', SIG)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), False),
             None,
         )
 
         # return None if compressed size not match
-        bytes_ = b'dumm' + struct.pack('<4L', SIG, 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<4L', sig, raw_crc, comp_len + 1, raw_len)
+        self.assertEqual(
+            repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), False),
+            None,
+        )
+
+        bytes_ = comp_bytes + struct.pack('<4L', sig, raw_crc, comp_len - 1, raw_len)
+        self.assertEqual(
+            repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), False),
+            None,
+        )
+
+        bytes_ = b'1' + comp_bytes + struct.pack('<4L', sig, raw_crc, comp_len, raw_len)
+        self.assertEqual(
+            repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), False),
+            None,
+        )
+
+        bytes_ = comp_bytes[1:] + struct.pack('<4L', sig, raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), False),
             None,
         )
 
         # zip64
-        bytes_ = b'dummy' + struct.pack('<2L2Q', SIG, 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<2L2Q', sig, raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), True),
-            (0x4ff4f23f, 5, 5, 24),
+            (raw_crc, comp_len, raw_len, 24),
         )
 
         # offset
-        bytes_ = b'dummy' + struct.pack('<4L', SIG, 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<4L', sig, raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor(io.BytesIO(bytes_), 1, len(bytes_), False),
             None,
         )
 
-        bytes_ = b'123dummy' + struct.pack('<4L', SIG, 0x4ff4f23f, 5, 5)
+        bytes_ = b'123' + comp_bytes + struct.pack('<4L', sig, raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), False),
             None,
         )
         self.assertEqual(
             repacker._scan_data_descriptor(io.BytesIO(bytes_), 3, len(bytes_), False),
-            (0x4ff4f23f, 5, 5, 16),
+            (raw_crc, comp_len, raw_len, 16),
         )
 
         # end_offset
-        bytes_ = b'dummy' + struct.pack('<4L', SIG, 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<4L', sig, raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_) - 1, False),
             None,
         )
 
-        bytes_ = b'dummy' + struct.pack('<4L', SIG, 0x4ff4f23f, 5, 5) + b'123'
+        bytes_ = comp_bytes + struct.pack('<4L', sig, raw_crc, comp_len, raw_len) + b'123'
         self.assertEqual(
             repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_) - 3, False),
-            (0x4ff4f23f, 5, 5, 16),
+            (raw_crc, comp_len, raw_len, 16),
+        )
+        self.assertEqual(
+            repacker._scan_data_descriptor(io.BytesIO(bytes_), 0, len(bytes_), False),
+            (raw_crc, comp_len, raw_len, 16),
         )
 
     def test_scan_data_descriptor_no_sig(self):
         repacker = zipfile._ZipRepacker()
 
+        raw_bytes = comp_bytes = b'dummy'
+        raw_len = comp_len = len(raw_bytes)
+        raw_crc = zipfile.crc32(raw_bytes)
+
         # basic
-        bytes_ = b'dummy' + struct.pack('<3L', 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), False),
-            (0x4ff4f23f, 5, 5, 12),
+            (raw_crc, comp_len, raw_len, 12),
         )
 
         # return None if compressed size not match
-        bytes_ = b'dumm' + struct.pack('<3L', 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len + 1, raw_len)
+        self.assertEqual(
+            repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), False),
+            None,
+        )
+
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len - 1, raw_len)
+        self.assertEqual(
+            repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), False),
+            None,
+        )
+
+        bytes_ = b'1' + comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
+        self.assertEqual(
+            repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), False),
+            None,
+        )
+
+        bytes_ = comp_bytes[1:] + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), False),
             None,
         )
 
         # zip64
-        bytes_ = b'dummy' + struct.pack('<L2Q', 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<L2Q', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), True),
-            (0x4ff4f23f, 5, 5, 20),
+            (raw_crc, comp_len, raw_len, 20),
         )
 
         # offset
-        bytes_ = b'dummy' + struct.pack('<3L', 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 1, len(bytes_), False),
             None,
         )
 
-        bytes_ = b'123dummy' + struct.pack('<3L', 0x4ff4f23f, 5, 5)
-        self.assertEqual(
-            repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), False),
-            None,
-        )
+        bytes_ = b'123' + comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 3, len(bytes_), False),
-            (0x4ff4f23f, 5, 5, 12),
+            (raw_crc, comp_len, raw_len, 12),
         )
 
         # end_offset
-        bytes_ = b'dummy' + struct.pack('<3L', 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_) - 1, False),
             None,
         )
 
-        bytes_ = b'dummy' + struct.pack('<3L', 0x4ff4f23f, 5, 5) + b'123'
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len) + b'123'
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_) - 3, False),
-            (0x4ff4f23f, 5, 5, 12),
+            (raw_crc, comp_len, raw_len, 12),
+        )
+        self.assertEqual(
+            repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), False),
+            (raw_crc, comp_len, raw_len, 12),
         )
 
         # chunk_size
-        bytes_ = b'dummy' + struct.pack('<3L', 0x4ff4f23f, 5, 5)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), False, 12),
-            (0x4ff4f23f, 5, 5, 12),
+            (raw_crc, comp_len, raw_len, 12),
         )
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig(io.BytesIO(bytes_), 0, len(bytes_), False, 1),
-            (0x4ff4f23f, 5, 5, 12),
+            (raw_crc, comp_len, raw_len, 12),
         )
 
     def test_scan_data_descriptor_no_sig_by_decompression_stored(self):
@@ -1781,44 +1822,40 @@ class ZipRepackerTests(unittest.TestCase):
     def _test_scan_data_descriptor_no_sig_by_decompression(self, method):
         repacker = zipfile._ZipRepacker()
 
-        compressor = zipfile._get_compressor(method)
-
         raw_bytes = b'dummy'
         raw_len = len(raw_bytes)
+        raw_crc = zipfile.crc32(raw_bytes)
+
+        compressor = zipfile._get_compressor(method)
         comp_bytes = compressor.compress(raw_bytes)
         comp_bytes += compressor.flush()
         comp_len = len(comp_bytes)
 
         # basic
-        bytes_ = comp_bytes + struct.pack('<3L', 0x4ff4f23f, comp_len, raw_len)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig_by_decompression(
                 io.BytesIO(bytes_), 0, len(bytes_), False, method),
-            (0x4ff4f23f, comp_len, raw_len, 12),
+            (raw_crc, comp_len, raw_len, 12),
         )
 
-        # return None if insufficient data length
-        bytes_ = comp_bytes + struct.pack('<3L', 0x4ff4f23f, comp_len, raw_len)
+        # return None if data length < DD signature
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig_by_decompression(
-                io.BytesIO(bytes_), 0, len(bytes_) - 1, False, method),
-            None,
-        )
-
-        bytes_ = comp_bytes + struct.pack('<3L', 0x4ff4f23f, comp_len, raw_len)[:-1]
-        self.assertEqual(
-            repacker._scan_data_descriptor_no_sig_by_decompression(
-                io.BytesIO(bytes_), 0, len(bytes_), False, method),
-            None,
-        )
-        self.assertEqual(
-            repacker._scan_data_descriptor_no_sig_by_decompression(
-                io.BytesIO(bytes_), 0, len(bytes_) + 1, False, method),
+                io.BytesIO(bytes_), 0, 11, False, method),
             None,
         )
 
         # return None if compressed size not match
-        bytes_ = comp_bytes + struct.pack('<3L', 0x4ff4f23f, comp_len - 1, raw_len)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len + 1, raw_len)
+        self.assertEqual(
+            repacker._scan_data_descriptor_no_sig_by_decompression(
+                io.BytesIO(bytes_), 0, len(bytes_), False, method),
+            None,
+        )
+
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len - 1, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig_by_decompression(
                 io.BytesIO(bytes_), 0, len(bytes_), False, method),
@@ -1826,41 +1863,46 @@ class ZipRepackerTests(unittest.TestCase):
         )
 
         # zip64
-        bytes_ = comp_bytes + struct.pack('<L2Q', 0x4ff4f23f, comp_len, raw_len)
+        bytes_ = comp_bytes + struct.pack('<L2Q', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig_by_decompression(
                 io.BytesIO(bytes_), 0, len(bytes_), True, method),
-            (0x4ff4f23f, comp_len, raw_len, 20),
+            (raw_crc, comp_len, raw_len, 20),
         )
 
         # offset
-        bytes_ = comp_bytes + struct.pack('<3L', 0x4ff4f23f, comp_len, raw_len)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig_by_decompression(
                 io.BytesIO(bytes_), 1, len(bytes_), False, method),
             None,
         )
 
-        bytes_ = b'123' + comp_bytes + struct.pack('<3L', 0x4ff4f23f, comp_len, raw_len)
+        bytes_ = b'123' + comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig_by_decompression(
                 io.BytesIO(bytes_), 3, len(bytes_), False, method),
-            (0x4ff4f23f, comp_len, raw_len, 12),
+            (raw_crc, comp_len, raw_len, 12),
         )
 
         # end_offset
-        bytes_ = comp_bytes + struct.pack('<3L', 0x4ff4f23f, comp_len, raw_len)
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len)
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig_by_decompression(
-                io.BytesIO(bytes_), 0, len(bytes_) - 2, False, method),
+                io.BytesIO(bytes_), 0, len(bytes_) - 1, False, method),
             None,
         )
 
-        bytes_ = comp_bytes + struct.pack('<3L', 0x4ff4f23f, comp_len, raw_len) + b'123'
+        bytes_ = comp_bytes + struct.pack('<3L', raw_crc, comp_len, raw_len) + b'123'
         self.assertEqual(
             repacker._scan_data_descriptor_no_sig_by_decompression(
-                io.BytesIO(bytes_), 0, len(bytes_) - 2, False, method),
-            (0x4ff4f23f, comp_len, raw_len, 12),
+                io.BytesIO(bytes_), 0, len(bytes_) - 3, False, method),
+            (raw_crc, comp_len, raw_len, 12),
+        )
+        self.assertEqual(
+            repacker._scan_data_descriptor_no_sig_by_decompression(
+                io.BytesIO(bytes_), 0, len(bytes_), False, method),
+            (raw_crc, comp_len, raw_len, 12),
         )
 
     def _test_scan_data_descriptor_no_sig_by_decompression_invalid(self, method):

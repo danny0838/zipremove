@@ -488,6 +488,7 @@ class _ZipRepacker:
         dd_fmt = '<LQQ' if zip64 else '<LLL'
         dd_size = struct.calcsize(dd_fmt)
 
+        # early return and prevent potential `fp.read(-1)`
         if end_offset - dd_size < offset:
             return None
 
