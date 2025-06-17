@@ -15,7 +15,6 @@ from zipfile import (
     _FH_GENERAL_PURPOSE_FLAG_BITS,
     _FH_SIGNATURE,
     _FH_UNCOMPRESSED_SIZE,
-    LZMADecompressor,
     _get_decompressor,
     crc32,
     sizeFileHeader,
@@ -49,6 +48,20 @@ except ImportError:
         if os.altsep and os.altsep != "/" and os.altsep in filename:
             filename = filename.replace(os.altsep, "/")
         return filename
+
+try:
+    import zipfile
+    zipfile.LZMADecompressor().unused_data
+except AttributeError:
+    # polyfill to support LZMADecompressor().unused_data
+    class LZMADecompressor(zipfile.LZMADecompressor):
+        @property
+        def unused_data(self):
+            try:
+                return self._decomp.unused_data
+            except AttributeError:
+                return b''
+    zipfile.LZMADecompressor = LZMADecompressor
 
 
 class _ZipRepacker:
@@ -470,11 +483,6 @@ class _ZipRepacker:
             return False
 
         if decompressor is None:
-            return False
-
-        # Current LZMADecompressor is unreliable since it's `.eof` is usually
-        # not set as expected.
-        if isinstance(decompressor, LZMADecompressor):
             return False
 
         dd_fmt = '<LQQ' if zip64 else '<LLL'

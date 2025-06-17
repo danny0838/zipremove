@@ -1767,7 +1767,7 @@ class ZipRepackerTests(unittest.TestCase):
 
     @requires_lzma()
     def test_scan_data_descriptor_no_sig_by_decompression_lzma(self):
-        self._test_scan_data_descriptor_no_sig_by_decompression_invalid(zipfile.ZIP_LZMA)
+        self._test_scan_data_descriptor_no_sig_by_decompression(zipfile.ZIP_LZMA)
 
     @requires_zstd()
     def test_scan_data_descriptor_no_sig_by_decompression_zstd(self):
