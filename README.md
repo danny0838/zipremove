@@ -28,30 +28,32 @@ This package extends `zipfile` with `remove`-related functionalities.
 
 * `ZipFile.repack(removed=None, *, strict_descriptor=False[, chunk_size])`
 
-   Rewrites the archive to remove stale local file entries, shrinking the ZIP
-   file size.
+   Rewrites the archive to remove stale local file entries, shrinking its file
+   size.
 
    If *removed* is provided, it must be a sequence of `ZipInfo` objects
    representing removed entries; only their corresponding local file entries
    will be removed.
 
-   If *removed* is not provided, local file entries no longer referenced in the
-   central directory will be removed.  The algorithm assumes that local file
-   entries are stored consecutively:
+   If *removed* is not provided, the archive is scanned to identify and remove
+   local file entries that are no longer referenced in the central directory.
+   The algorithm assumes that local file entries (and the central directory,
+   which is mostly treated as the "last entry") are stored consecutively:
 
    1. Data before the first referenced entry is removed only when it appears to
       be a sequence of consecutive entries with no extra following bytes; extra
-      preceeding bytes are preserved.
+      preceding bytes are preserved.
    2. Data between referenced entries is removed only when it appears to
       be a sequence of consecutive entries with no extra preceding bytes; extra
       following bytes are preserved.
+   3. Entries must not overlap. If any entry's data overlaps with another, a
+      `BadZipFile` error is raised and no changes are made.
 
-   ``strict_descriptor=True`` can be provided to skip the slower scan for an
-   unsigned data descriptor (deprecated in the latest ZIP specification and is
-   only used by legacy tools) when checking for bytes resembling a valid local
-   file entry.  This improves performance, but may cause some stale local file
-   entries to be preserved, as any entry using an unsigned descriptor cannot
-   be detected.
+   When scanning, setting `strict_descriptor=True` disables detection of any
+   entry using an unsigned data descriptor (deprecated in the ZIP specification
+   since version 6.3.0, released on 2006-09-29, and used only by some legacy
+   tools). This improves performance, but may cause some stale entries to be
+   preserved.
 
    *chunk_size* may be specified to control the buffer size when moving
    entry data (default is 1 MiB).
