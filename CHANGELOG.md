@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.0] - 2025-06-18
+* Fixed an issue where an encrypted and compressed local file entry with an unsigned data descriptor cannot be detected.
+* Improved polyfill for `LZMADecompressor`.
+
 ## [0.3.0] - 2025-06-17
 * `import *` now imports the same identifiers as the standard `zipfile` module.
 * Enhanced scanning of unsigned data descriptors for LZMA-compressed entries.
