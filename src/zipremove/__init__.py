@@ -31,6 +31,12 @@ except NameError:
     ZIP_ZSTANDARD = 93
 
 try:
+    from zipfile import _MASK_ENCRYPTED
+except ImportError:
+    # polyfill for Python < 3.11
+    _MASK_ENCRYPTED = 1 << 0
+
+try:
     from zipfile import _MASK_USE_DATA_DESCRIPTOR
 except ImportError:
     # polyfill for Python < 3.11
@@ -398,8 +404,11 @@ class _ZipRepacker:
 
             dd = self._scan_data_descriptor(fp, pos, end_offset, zip64)
             if dd is None and not self.strict_descriptor:
-                dd = self._scan_data_descriptor_no_sig_by_decompression(
-                    fp, pos, end_offset, zip64, fheader[_FH_COMPRESSION_METHOD])
+                if zinfo.flag_bits & _MASK_ENCRYPTED:
+                    dd = False
+                else:
+                    dd = self._scan_data_descriptor_no_sig_by_decompression(
+                        fp, pos, end_offset, zip64, fheader[_FH_COMPRESSION_METHOD])
                 if dd is False:
                     dd = self._scan_data_descriptor_no_sig(fp, pos, end_offset, zip64)
             if dd is None:

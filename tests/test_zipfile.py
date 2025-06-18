@@ -1666,6 +1666,40 @@ class ZipRepackerTests(unittest.TestCase):
         m_sddnsbd.assert_not_called()
         m_sddns.assert_not_called()
 
+    def test_validate_local_file_entry_encrypted(self):
+        repacker = zipfile._ZipRepacker()
+
+        bytes_ = (
+            b'PK\x03\x04'
+            b'\x14\x00'
+            b'\x09\x00'
+            b'\x08\x00'
+            b'\xAB\x28'
+            b'\xD2\x5A'
+            b'\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00'
+            b'\x08\x00'
+            b'\x00\x00'
+            b'file.txt'
+            b'\x97\xF1\x83\x34\x9D\xC4\x8C\xD3\xED\x79\x8C\xA2\xBB\x49\xFF\x1B\x89'
+            b'\x3F\xF2\xF4\x4F'
+            b'\x11\x00\x00\x00'
+            b'\x05\x00\x00\x00'
+        )
+        fz = io.BytesIO(bytes_)
+        with mock.patch.object(repacker, '_scan_data_descriptor',
+                               wraps=repacker._scan_data_descriptor) as m_sdd, \
+             mock.patch.object(repacker, '_scan_data_descriptor_no_sig_by_decompression',
+                               wraps=repacker._scan_data_descriptor_no_sig_by_decompression) as m_sddnsbd, \
+             mock.patch.object(repacker, '_scan_data_descriptor_no_sig',
+                               wraps=repacker._scan_data_descriptor_no_sig) as m_sddns:
+            result = repacker._validate_local_file_entry(fz, 0, len(bytes_))
+        self.assertEqual(result, len(bytes_))
+        m_sdd.assert_called_once_with(fz, 38, len(bytes_), False)
+        m_sddnsbd.assert_not_called()
+        m_sddns.assert_called_once_with(fz, 38, len(bytes_), False)
+
     def test_iter_scan_signature(self):
         bytes_ = b'sig__sig__sig__sig'
         ln = len(bytes_)
