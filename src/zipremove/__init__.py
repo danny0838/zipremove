@@ -15,6 +15,7 @@ from zipfile import (
     _FH_GENERAL_PURPOSE_FLAG_BITS,
     _FH_SIGNATURE,
     _FH_UNCOMPRESSED_SIZE,
+    LZMADecompressor,
     _get_decompressor,
     crc32,
     sizeFileHeader,
@@ -50,18 +51,16 @@ except ImportError:
         return filename
 
 try:
-    import zipfile
-    zipfile.LZMADecompressor().unused_data
+    LZMADecompressor().unused_data
 except AttributeError:
     # polyfill to support LZMADecompressor().unused_data
-    class LZMADecompressor(zipfile.LZMADecompressor):
-        @property
-        def unused_data(self):
-            try:
-                return self._decomp.unused_data
-            except AttributeError:
-                return b''
-    zipfile.LZMADecompressor = LZMADecompressor
+    @property
+    def unused_data(self):
+        try:
+            return self._decomp.unused_data
+        except AttributeError:
+            return b''
+    LZMADecompressor.unused_data = unused_data
 
 
 class _ZipRepacker:
