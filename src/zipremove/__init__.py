@@ -262,14 +262,11 @@ class _ZipRepacker:
                         used_entry_size,
                     )
 
-                if used_entry_size < entry_size:
-                    stale_entry_size = self._validate_local_file_entry_sequence(
-                        fp,
-                        old_header_offset + used_entry_size,
-                        old_header_offset + entry_size,
-                    )
-                else:
-                    stale_entry_size = 0
+                stale_entry_size = self._validate_local_file_entry_sequence(
+                    fp,
+                    old_header_offset + used_entry_size,
+                    old_header_offset + entry_size,
+                )
 
                 if stale_entry_size > 0:
                     self._copy_bytes(
