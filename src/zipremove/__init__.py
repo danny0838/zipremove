@@ -614,15 +614,16 @@ class ZipFile(ZipFile):
 
         with self._lock:
             # get the zinfo
-            # raise KeyError if arcname does not exist
             if isinstance(zinfo_or_arcname, ZipInfo):
                 zinfo = zinfo_or_arcname
-                if zinfo not in self.filelist:
-                    raise KeyError('There is no item %r in the archive' % zinfo)
             else:
+                # raise KeyError if arcname does not exist
                 zinfo = self.getinfo(zinfo_or_arcname)
 
-            self.filelist.remove(zinfo)
+            try:
+                self.filelist.remove(zinfo)
+            except ValueError:
+                raise KeyError('There is no item %r in the archive' % zinfo) from None
 
             try:
                 del self.NameToInfo[zinfo.filename]
