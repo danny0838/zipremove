@@ -18,7 +18,7 @@ This package extends `zipfile` with `remove`-related functionalities.
    a path is provided.
 
    This does not physically remove the local file entry from the archive.
-   Call `ZipFile.repack` afterwards to reclaim space.
+   Call `repack` afterwards to reclaim space.
 
    The archive must be opened with mode ``'w'``, ``'x'`` or ``'a'``.
 
