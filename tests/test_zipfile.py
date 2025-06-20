@@ -1,3 +1,4 @@
+import contextlib
 import io
 import itertools
 import os
@@ -6,7 +7,6 @@ import sys
 import unittest
 import unittest.mock as mock
 import warnings
-from contextlib import nullcontext
 
 import zipremove as zipfile
 
@@ -1392,7 +1392,7 @@ class ZipRepackerTests(unittest.TestCase):
         fz = io.BytesIO()
         f = Unseekable(fz) if dd else fz
         cm = (mock.patch.object(struct, 'pack', side_effect=struct_pack_no_dd_sig)
-              if not dd_sig else nullcontext())
+              if not dd_sig else contextlib.nullcontext())
         with zipfile.ZipFile(f, 'w', compression=compression) as zh:
             with cm:
                 with zh.open(arcname, 'w', force_zip64=force_zip64) as fh:
