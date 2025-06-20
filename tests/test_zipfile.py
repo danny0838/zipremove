@@ -616,26 +616,19 @@ class AbstractRepackTests(RepackHelperMixin):
         self._prepare_zip_from_test_files(TESTFN, self.test_files)
 
         with zipfile.ZipFile(TESTFN, 'a', self.compression) as zh:
-            zi = zh.remove(zh.infolist()[0])
-            with mock.patch.object(zipfile._ZipRepacker, 'repack') as m_rp:
+            with mock.patch.object(zipfile._ZipRepacker, 'repack') as m_rp, \
+                 mock.patch.object(zipfile, '_ZipRepacker', wraps=zipfile._ZipRepacker) as m_zr:
                 zh.repack()
+        m_zr.assert_called_once_with()
         m_rp.assert_called_once_with(zh, None)
 
         with zipfile.ZipFile(TESTFN, 'a', self.compression) as zh:
             zi = zh.remove(zh.infolist()[0])
-            with mock.patch.object(zipfile._ZipRepacker, 'repack') as m_rp:
-                zh.repack([zi])
+            with mock.patch.object(zipfile._ZipRepacker, 'repack') as m_rp, \
+                 mock.patch.object(zipfile, '_ZipRepacker', wraps=zipfile._ZipRepacker) as m_zr:
+                zh.repack([zi], strict_descriptor=True, chunk_size=1024)
+        m_zr.assert_called_once_with(strict_descriptor=True, chunk_size=1024)
         m_rp.assert_called_once_with(zh, [zi])
-
-        with zipfile.ZipFile(TESTFN, 'a', self.compression) as zh:
-            with mock.patch.object(zipfile, '_ZipRepacker') as m_rp:
-                zh.repack()
-        m_rp.assert_called_once_with()
-
-        with zipfile.ZipFile(TESTFN, 'a', self.compression) as zh:
-            with mock.patch.object(zipfile, '_ZipRepacker') as m_rp:
-                zh.repack(strict_descriptor=True, chunk_size=1024)
-        m_rp.assert_called_once_with(strict_descriptor=True, chunk_size=1024)
 
     def test_repack_bytes_before_first_file(self):
         """Should preserve random bytes before the first recorded local file entry."""
