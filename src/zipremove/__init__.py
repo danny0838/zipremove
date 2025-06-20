@@ -377,8 +377,8 @@ class _ZipRepacker:
         if pos > end_offset:
             return None
 
+        # parse zip64
         try:
-            # parse zip64
             try:
                 zinfo._decodeExtra(crc32(filename))
             except TypeError:
