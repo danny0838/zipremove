@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.4.1] - 2025-06-20
+* Internal code optimization.
+
 ## [0.4.0] - 2025-06-18
 * Fixed an issue where an encrypted and compressed local file entry with an unsigned data descriptor cannot be detected.
 * Improved polyfill for `LZMADecompressor`.
