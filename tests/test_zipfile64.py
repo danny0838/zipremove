@@ -18,16 +18,19 @@ except ImportError:
     # polyfill for Python < 3.12
     from test.test_zipfile import Unseekable, requires_zlib
 
-ENABLED_RESOURCES = set(os.environ.get("TEST_RESOURCES", "").split(","))
-
-def requires(resource_name):
+def requires_resource(res):
+    if not hasattr(requires_resource, '_resources'):
+        requires_resource._resources = set(os.environ.get("TEST_RESOURCES", "").split(","))
     return unittest.skipUnless(
-        resource_name in ENABLED_RESOURCES,
-        f"requires resource: {resource_name!r} (set envvar TEST_RESOURCES)"
+        res in requires_resource._resources,
+        f"requires resource {res!r} in envvar TEST_RESOURCES"
     )
 
+@requires_resource('extralargefile')
+def setUpModule():
+    pass
 
-@requires('extralargefile')
+
 class TestRepack(unittest.TestCase):
     def setUp(self):
         # Create test data.
