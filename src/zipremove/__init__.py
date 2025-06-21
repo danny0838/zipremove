@@ -82,7 +82,7 @@ class _ZipRepacker:
 
     def copy(self, zfile, zinfo, filename):
         # make a copy of zinfo
-        zinfo2 = copy.deepcopy(zinfo)
+        zinfo2 = copy.copy(zinfo)
 
         # apply sanitized new filename as in `ZipInfo.__init__`
         zinfo2.orig_filename = filename
