@@ -103,6 +103,12 @@ class AbstractCopyTests(RepackHelperMixin):
                     # check NameToInfo cache
                     self.assertEqual(ComparableZipInfo(zh.getinfo('file.txt')), zi_new)
 
+                    # check content
+                    self.assertEqual(
+                        zh.read(zi_new[0]),
+                        zh.read(zinfos[i][0]),
+                    )
+
                 # make sure the zip file is still valid
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
@@ -124,6 +130,12 @@ class AbstractCopyTests(RepackHelperMixin):
                     # check NameToInfo cache
                     self.assertEqual(ComparableZipInfo(zh.getinfo('file.txt')), zi_new)
 
+                    # check content
+                    self.assertEqual(
+                        zh.read(zi_new[0]),
+                        zh.read(zinfos[i][0]),
+                    )
+
                 # make sure the zip file is still valid
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
@@ -144,6 +156,12 @@ class AbstractCopyTests(RepackHelperMixin):
 
                     # check NameToInfo cache
                     self.assertEqual(ComparableZipInfo(zh.getinfo('file.txt')), zi_new)
+
+                    # check content
+                    self.assertEqual(
+                        zh.read(zi_new[0]),
+                        zh.read(zinfos[i][0]),
+                    )
 
                 # make sure the zip file is still valid
                 with zipfile.ZipFile(TESTFN) as zh:
@@ -167,6 +185,12 @@ class AbstractCopyTests(RepackHelperMixin):
                     # check NameToInfo cache
                     self.assertEqual(ComparableZipInfo(zh.getinfo('file.txt')), zi_new)
 
+                    # check content
+                    self.assertEqual(
+                        zh.read(zi_new[0]),
+                        zh.read(zinfos[i][0]),
+                    )
+
                 # make sure the zip file is still valid
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
@@ -187,6 +211,12 @@ class AbstractCopyTests(RepackHelperMixin):
 
                     # check NameToInfo cache
                     self.assertEqual(ComparableZipInfo(zh.getinfo('file2.txt')), zi_new)
+
+                    # check content
+                    self.assertEqual(
+                        zh.read(zi_new[0]),
+                        zh.read(zinfos[i][0]),
+                    )
 
                 # make sure the zip file is still valid
                 with zipfile.ZipFile(TESTFN) as zh:
@@ -238,7 +268,12 @@ class AbstractCopyTests(RepackHelperMixin):
 
             # check NameToInfo cache
             self.assertEqual(ComparableZipInfo(zh.getinfo('file.txt')), zi_new)
-            zh.remove(self.test_files[0][0])
+
+            # check content
+            self.assertEqual(
+                zh.read(zi_new[0]),
+                zh.read(zinfos[0][0]),
+            )
 
         # make sure the zip file is still valid
         with zipfile.ZipFile(TESTFN) as zh:
@@ -261,7 +296,12 @@ class AbstractCopyTests(RepackHelperMixin):
 
             # check NameToInfo cache
             self.assertEqual(ComparableZipInfo(zh.getinfo('file.txt')), zi_new)
-            zh.remove(self.test_files[0][0])
+
+            # check content
+            self.assertEqual(
+                zh.read(zi_new[0]),
+                zh.read(zinfos[0][0]),
+            )
 
         # make sure the zip file is still valid
         with zipfile.ZipFile(TESTFN) as zh:
