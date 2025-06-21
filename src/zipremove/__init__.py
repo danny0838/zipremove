@@ -90,7 +90,7 @@ class _ZipRepacker:
 
         zinfo2.header_offset = zfile.start_dir
 
-        # polyfill: update zinfo2._end_offset if exists
+        # polyfill: clear zinfo2._end_offset if exists
         # (Python >= 3.8 with fix #109858)
         if hasattr(zinfo2, '_end_offset'):
             zinfo2._end_offset = None
@@ -180,8 +180,8 @@ class _ZipRepacker:
             - Modifies the ZIP file in place.
             - Updates zfile.start_dir to account for removed data.
             - Sets zfile._didModify to True.
-            - Updates header_offset and _end_offset of referenced ZipInfo
-              instances.
+            - Updates header_offset and clears _end_offset of referenced
+              ZipInfo instances.
 
         Parameters:
             zfile: A ZipFile object representing the archive to repack.
@@ -283,17 +283,11 @@ class _ZipRepacker:
         zfile.start_dir -= entry_offset
         zfile._didModify = True
 
-        # polyfill: update ZipInfo._end_offset if exists
+        # polyfill: clear ZipInfo._end_offset if exists
         # (Python >= 3.8 with fix #109858)
         if hasattr(ZipInfo, '_end_offset'):
-            end_offset = zfile.start_dir
-            for zinfo in reversed(filelist):
-                if zinfo in removed_zinfos:
-                    zinfo._end_offset = None
-                else:
-                    if zinfo._end_offset is not None:
-                        zinfo._end_offset = end_offset
-                    end_offset = zinfo.header_offset
+            for zinfo in filelist:
+                zinfo._end_offset = None
 
     def _calc_initial_entry_offset(self, fp, data_offset):
         checked_offsets = {}
