@@ -97,7 +97,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     # check infolist
                     self.assertEqual(
                         [ComparableZipInfo(zi) for zi in zh.infolist()],
-                        [*(zi for j, zi in enumerate(zinfos)), zi_new],
+                        [*zinfos, zi_new],
                     )
 
                     # check NameToInfo cache
@@ -118,7 +118,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     # check infolist
                     self.assertEqual(
                         [ComparableZipInfo(zi) for zi in zh.infolist()],
-                        [*(zi for j, zi in enumerate(zinfos)), zi_new],
+                        [*zinfos, zi_new],
                     )
 
                     # check NameToInfo cache
@@ -139,7 +139,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     # check infolist
                     self.assertEqual(
                         [ComparableZipInfo(zi) for zi in zh.infolist()],
-                        [*(zi for j, zi in enumerate(zinfos)), zi_new],
+                        [*zinfos, zi_new],
                     )
 
                     # check NameToInfo cache
@@ -161,7 +161,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     # check infolist
                     self.assertEqual(
                         [ComparableZipInfo(zi) for zi in zh.infolist()],
-                        [*(zi for j, zi in enumerate(zinfos)), zi_new],
+                        [*zinfos, zi_new],
                     )
 
                     # check NameToInfo cache
@@ -182,7 +182,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     # check infolist
                     self.assertEqual(
                         [ComparableZipInfo(zi) for zi in zh.infolist()],
-                        [*(zi for j, zi in enumerate(zinfos)), zi_new],
+                        [*zinfos, zi_new],
                     )
 
                     # check NameToInfo cache
@@ -233,7 +233,7 @@ class AbstractCopyTests(RepackHelperMixin):
             # check infolist
             self.assertEqual(
                 [ComparableZipInfo(zi) for zi in zh.infolist()],
-                [*(zi for j, zi in enumerate(zinfos)), zi_new],
+                [*zinfos, zi_new],
             )
 
             # check NameToInfo cache
@@ -256,7 +256,7 @@ class AbstractCopyTests(RepackHelperMixin):
             # check infolist
             self.assertEqual(
                 [ComparableZipInfo(zi) for zi in zh.infolist()],
-                [*(zi for j, zi in enumerate(zinfos)), zi_new],
+                [*zinfos, zi_new],
             )
 
             # check NameToInfo cache
