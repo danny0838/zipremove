@@ -4,6 +4,7 @@ import itertools
 import os
 import struct
 import sys
+import time
 import unittest
 import unittest.mock as mock
 import warnings
@@ -43,7 +44,7 @@ def requires_zip64fix(reason='requires Python >= 3.11.4 for zip64 fix (#103861)'
 
 
 class ComparableZipInfo:
-    keys = ('filename', 'header_offset', 'compress_size', 'CRC')
+    keys = [i for i in zipfile.ZipInfo.__slots__ if not i.startswith('_')]
 
     def __new__(cls, zinfo):
         return {i: getattr(zinfo, i) for i in cls.keys}
@@ -62,6 +63,8 @@ def struct_pack_no_dd_sig(fmt, *values):
 
 class RepackHelperMixin:
     """Common helpers for remove and repack."""
+    maxDiff = 8192
+
     @classmethod
     def _prepare_test_files(cls):
         return [
@@ -94,6 +97,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     zi_new = {
                         **ComparableZipInfo(zinfos[i]),
                         'filename': 'file.txt',
+                        'orig_filename': 'file.txt',
                         'header_offset': zh.start_dir,
                     }
                     zh.copy(self.test_files[i][0], 'file.txt')
@@ -125,6 +129,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     zi_new = {
                         **ComparableZipInfo(zinfos[i]),
                         'filename': 'file.txt',
+                        'orig_filename': 'file.txt',
                         'header_offset': zh.start_dir,
                     }
                     zh.copy(zh.infolist()[i], 'file.txt')
@@ -156,6 +161,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     zi_new = {
                         **ComparableZipInfo(zinfos[i]),
                         'filename': 'file.txt',
+                        'orig_filename': 'file.txt',
                         'header_offset': zh.start_dir,
                     }
                     zh.copy(self.test_files[i][0], 'file.txt')
@@ -188,6 +194,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     zi_new = {
                         **ComparableZipInfo(zinfos[i]),
                         'filename': 'file.txt',
+                        'orig_filename': 'file.txt',
                         'header_offset': zh.start_dir,
                     }
                     zh.copy(self.test_files[i][0], 'file.txt')
@@ -219,6 +226,7 @@ class AbstractCopyTests(RepackHelperMixin):
                     zi_new = {
                         **ComparableZipInfo(zinfos[i]),
                         'filename': 'file2.txt',
+                        'orig_filename': 'file2.txt',
                         'header_offset': zh.start_dir,
                     }
                     zh.copy(self.test_files[i][0], 'file2.txt')
@@ -280,6 +288,7 @@ class AbstractCopyTests(RepackHelperMixin):
             zi_new = {
                 **ComparableZipInfo(zinfos[0]),
                 'filename': 'file.txt',
+                'orig_filename': 'file.txt',
                 'header_offset': zh.start_dir,
             }
             zh.copy(zh.infolist()[0], 'file.txt')
@@ -312,6 +321,7 @@ class AbstractCopyTests(RepackHelperMixin):
             zi_new = {
                 **ComparableZipInfo(zinfos[0]),
                 'filename': 'file.txt',
+                'orig_filename': 'file.txt',
                 'header_offset': zh.start_dir,
             }
             zh.copy(zh.infolist()[0], 'file.txt')
@@ -813,6 +823,7 @@ class AbstractRepackTests(RepackHelperMixin):
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
 
+    @mock.patch.object(time, 'time', new=lambda: 315504000)  # fix time for ZipFile.writestr()
     def test_repack_bytes_before_removed_files(self):
         """Should preserve if there are bytes before stale local file entries."""
         for ii in ([1], [1, 2], [2]):
@@ -856,6 +867,7 @@ class AbstractRepackTests(RepackHelperMixin):
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
 
+    @mock.patch.object(time, 'time', new=lambda: 315504000)  # fix time for ZipFile.writestr()
     def test_repack_bytes_after_removed_files(self):
         """Should keep extra bytes if there are bytes after stale local file entries."""
         for ii in ([1], [1, 2], [2]):
@@ -898,6 +910,7 @@ class AbstractRepackTests(RepackHelperMixin):
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
 
+    @mock.patch.object(time, 'time', new=lambda: 315504000)  # fix time for ZipFile.writestr()
     def test_repack_bytes_between_removed_files(self):
         """Should strip only local file entries before random bytes."""
         # calculate the expected results
@@ -1055,6 +1068,7 @@ class AbstractRepackTests(RepackHelperMixin):
                 with zipfile.ZipFile(TESTFN) as zh:
                     self.assertIsNone(zh.testzip())
 
+    @mock.patch.object(time, 'time', new=lambda: 315504000)  # fix time for ZipFile.writestr()
     def test_repack_removed_bytes_between_files(self):
         """Should not remove bytes between local file entries."""
         for ii in ([0], [1], [2]):
