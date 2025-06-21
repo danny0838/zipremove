@@ -83,6 +83,9 @@ class AbstractCopyTests(RepackHelperMixin):
     def setUpClass(cls):
         cls.test_files = cls._prepare_test_files()
 
+    def tearDown(self):
+        unlink(TESTFN)
+
     def test_copy_by_name(self):
         for i in range(3):
             with self.subTest(i=i, filename=self.test_files[i][0]):
@@ -242,7 +245,6 @@ class AbstractCopyTests(RepackHelperMixin):
             self.assertIsNone(zh.testzip())
 
     def test_copy_mode_x(self):
-        unlink(TESTFN)
         with zipfile.ZipFile(TESTFN, 'x') as zh:
             for file, data in self.test_files:
                 zh.writestr(file, data)
