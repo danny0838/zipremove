@@ -113,10 +113,9 @@ class _ZipRepacker:
         """
         Repack the ZIP file, stripping unreferenced local file entries.
 
-        Assumes that local file entries are stored consecutively, with no gaps
-        or overlaps.
-
-        Behavior:
+        Assumes that local file entries (and the central directory, which is
+        mostly treated as the "last entry") are stored consecutively, with no
+        gaps or overlaps:
 
         1. If any referenced entry overlaps with another, a `BadZipFile` error
            is raised since safe repacking cannot be guaranteed.
@@ -129,8 +128,8 @@ class _ZipRepacker:
            be a sequence of consecutive entries with no extra preceding bytes;
            extra following bytes are preserved.
 
-        4. This is to prevent an unexpected data removal (false positive),
-           though a false negative may happen in certain rare cases.
+        This is to prevent an unexpected data removal (false positive), though
+        a false negative may happen in certain rare cases.
 
         Examples:
 
