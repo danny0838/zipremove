@@ -2128,6 +2128,10 @@ class ZipRepackerTests(unittest.TestCase):
     def test_trace_compressed_block_end_bz2(self):
         self._test_trace_compressed_block_end(zipfile.ZIP_BZIP2, OSError)
 
+    @requires_lzma()
+    def test_trace_compressed_block_end_lzma(self):
+        self._test_trace_compressed_block_end(zipfile.ZIP_LZMA, EOFError)
+
     @requires_zstd()
     def test_trace_compressed_block_end_zstd(self):
         import compression.zstd
