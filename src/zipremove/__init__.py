@@ -177,7 +177,8 @@ class _ZipRepacker:
 
         Side effects:
             - Modifies the ZIP file in place.
-            - Updates zfile.start_dir to account for removed data.
+            - Updates zfile.start_dir and zfile.data_offset to account for
+              removed data.
             - Sets zfile._didModify to True.
             - Updates header_offset and clears _end_offset of referenced
               ZipInfo instances.
@@ -281,6 +282,15 @@ class _ZipRepacker:
         # update state
         zfile.start_dir -= entry_offset
         zfile._didModify = True
+
+        # polyfill: update _data_offset if exists
+        if getattr(zfile, '_data_offset', None):
+            try:
+                offset = filelist[0].header_offset
+            except IndexError:
+                offset = zfile.start_dir
+            if offset < zfile._data_offset:
+                zfile._data_offset = offset
 
         # polyfill: clear ZipInfo._end_offset if exists
         # (Python >= 3.8 with fix #109858)
