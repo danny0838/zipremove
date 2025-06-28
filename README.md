@@ -29,7 +29,7 @@ This package extends `zipfile` with `remove`-related functionalities.
 * `ZipFile.repack(removed=None, *, strict_descriptor=False[, chunk_size])`
 
    Rewrites the archive to remove stale local file entries, shrinking its file
-   size.
+   size.  The archive must be opened with mode ``'a'``.
 
    If *removed* is provided, it must be a sequence of `ZipInfo` objects
    representing removed entries; only their corresponding local file entries
@@ -57,8 +57,6 @@ This package extends `zipfile` with `remove`-related functionalities.
 
    *chunk_size* may be specified to control the buffer size when moving
    entry data (default is 1 MiB).
-
-   The archive must be opened with mode ``'a'``.
 
    Calling `repack` on a closed ZipFile will raise a `ValueError`.
 
