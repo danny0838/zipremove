@@ -1,8 +1,12 @@
 # Changelog
 
+## [0.6.0] - 2025-07-03
+* `repack` now updates `data_offset` for `ZipFile`.
+* Adjusted the default buffer size for several intetnal methods used by `repack`.
+
 ## [0.5.0] - 2025-06-21
 * `repack` now clears `_end_offset` for all referenced `ZipInfo` objects.
-* Optimize `copy` by using shallow copy instead.
+* Optimized `copy` by using shallow copy instead.
 
 ## [0.4.1] - 2025-06-20
 * Internal code optimization.
