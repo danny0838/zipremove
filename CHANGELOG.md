@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.6.1] - 2025-07-22
+* Removed `zipfile.data_offset` updating since it has been removed.
+
 ## [0.6.0] - 2025-07-03
 * `repack` now updates `data_offset` for `ZipFile`.
 * Adjusted the default buffer size for several intetnal methods used by `repack`.
