@@ -27,7 +27,7 @@ jobs:
           python-version: '3.13'
 
       - name: Install dependencies
-        run: pip install .[dev]
+        run: pip install -r requirements-build.txt
 
       - name: Upload to PyPI
         env:
