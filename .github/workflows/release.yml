@@ -1,4 +1,4 @@
-name: Publish extension
+name: Release package
 
 on:
   workflow_dispatch:
@@ -27,7 +27,13 @@ jobs:
           python-version: '3.13'
 
       - name: Install dependencies
-        run: pip install -r requirements-build.txt
+        run: pip install -r requirements-dev.txt
+
+      - name: Verify no code issue
+        run: flake8 .
+
+      - name: Run tests
+        run: tox -e py
 
       - name: Upload to PyPI
         env:
