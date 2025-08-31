@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.0] - 2025-08-31
+* Fixed a compatibility issue for older `tox`.
+* Dev dependencies are now handled with `requirements-*.txt` files rather than `extras_require`.
+* Miscellaneous improvements to the dev tools.
+
 ## [0.6.1] - 2025-07-22
 * Removed `zipfile.data_offset` updating since it has been removed.
 
