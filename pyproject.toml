@@ -55,7 +55,6 @@ exclude = [
     ".tox",
     "__pycache__",
     "build",
-    "setup.py",
 ]
 max-line-length = 130
 
@@ -74,6 +73,7 @@ ignore = [
 [tool.isort]
 multi_line_output = 3
 include_trailing_comma = true
-extend_skip = [
-    "setup.py",
-]
+
+# skip directories included by default
+# ref: https://pycqa.github.io/isort/docs/configuration/options.html
+# extend_skip = []
