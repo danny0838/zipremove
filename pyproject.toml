@@ -1,3 +1,61 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.2", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "zipremove"
+version = "0.7.1"
+requires-python = "~=3.9"
+description = "Extend `zipfile` with `remove`-related functionalities"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Danny Lin", email = "danny0838@gmail.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: System :: Archiving :: Compression",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/danny0838/zipremove"
+
+[tool.flake8]
+exclude = [
+    ".git",
+    ".venv",
+    ".tox",
+    "__pycache__",
+    "build",
+    "setup.py",
+]
+max-line-length = 130
+
+# Flake8 Rules
+# https://www.flake8rules.com/
+ignore = [
+    "E122",
+    "E226",
+    "E302",
+    "E305",
+    "F403",
+    "F405",
+    "W504",
+]
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+extend_skip = [
+    "setup.py",
+]
