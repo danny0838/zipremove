@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.7.1] - 2025-08-31
+* Updated linter dependencies and fixed compatibility issues.
+
 ## [0.7.0] - 2025-08-31
 * Fixed a compatibility issue for older `tox`.
 * Dev dependencies are now handled with `requirements-*.txt` files rather than `extras_require`.
