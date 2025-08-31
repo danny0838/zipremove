@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.2", "wheel"]
+requires = ["setuptools>=77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,8 @@ version = "0.7.1"
 requires-python = "~=3.9"
 description = "Extend `zipfile` with `remove`-related functionalities"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE.*"]
 authors = [
     {name = "Danny Lin", email = "danny0838@gmail.com"},
 ]
