@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.8.0] - 2025-09-01
+* Reworked package management using `pyproject.toml`.
+
 ## [0.7.1] - 2025-08-31
 * Updated linter dependencies and fixed compatibility issues.
 
