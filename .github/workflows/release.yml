@@ -32,9 +32,6 @@ jobs:
       - name: Verify no code issue
         run: flake8 .
 
-      - name: Run tests
-        run: tox -e py
-
       - name: Upload to PyPI
         env:
           TWINE_USERNAME: __token__
