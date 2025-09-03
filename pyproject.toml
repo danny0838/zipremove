@@ -84,13 +84,13 @@ min_version = "4.22"
 
 [tool.tox.env_run_base]
 description = "run unit tests"
-use_develop = true
+package = "editable"
 pass_env = ["TEST_RESOURCES"]
 commands = [["python", "-m", "unittest", {replace = "posargs", extend = true}]]
 
 [tool.tox.env.release]
 description = "build and release to PyPI"
-skip_install = true
+package = "skip"
 deps = [
     "build",
     "twine>=4.0",
@@ -106,12 +106,12 @@ commands = [
 
 [tool.tox.env.lint]
 description = "lint source code"
-skip_install = true
+package = "skip"
 dependency_groups = ["lint"]
 commands = [["flake8", {replace = "posargs", default = ["."], extend = true}]]
 
 [tool.tox.env.isort]
 description = "sort imports for the source code"
-skip_install = true
+package = "skip"
 dependency_groups = ["lint"]
 commands = [["isort", {replace = "posargs", default = ["."], extend = true}]]
