@@ -32,6 +32,11 @@ jobs:
             pyver: '3.13'
             arch: arm64
 
+          # other Python implementations
+          - os: ubuntu-latest
+            pyver: '3.13t'
+            arch: x64
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
