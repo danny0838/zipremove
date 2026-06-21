@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.8.1] - 2026-06-21
+* Miscellaneous improvements to the internal code, test suite, dev tools, and documentation.
+
 ## [0.8.0] - 2025-09-01
 * Reworked package management using `pyproject.toml`.
 
