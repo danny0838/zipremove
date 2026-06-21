@@ -69,9 +69,13 @@ except AttributeError:
     LZMADecompressor.unused_data = unused_data
 
 
+_REPACK_CHUNK_SIZE = 2**20
+
+
 class _ZipRepacker:
     """Class for ZipFile repacking."""
-    def __init__(self, *, strict_descriptor=False, chunk_size=2**20, debug=0):
+    def __init__(self, *, strict_descriptor=True,
+                 chunk_size=_REPACK_CHUNK_SIZE, debug=0):
         self.debug = debug  # Level of printing: 0 through 3
         self.chunk_size = chunk_size
         self.strict_descriptor = strict_descriptor
@@ -122,7 +126,7 @@ class _ZipRepacker:
 
         2. Data before the first referenced entry is stripped only when it
            appears to be a sequence of consecutive entries with no extra
-           following bytes; extra preceeding bytes are preserved.
+           following bytes; extra preceding bytes are preserved.
 
         3. Data between referenced entries is stripped only when it appears to
            be a sequence of consecutive entries with no extra preceding bytes;
@@ -407,12 +411,19 @@ class _ZipRepacker:
 
             zinfo.CRC, zinfo.compress_size, zinfo.file_size, dd_size = dd
 
-        return (
+        entry_size = (
             sizeFileHeader +
             fheader[_FH_FILENAME_LENGTH] + fheader[_FH_EXTRA_FIELD_LENGTH] +
             zinfo.compress_size +
             dd_size
         )
+
+        # Treat as a false positive if the entry would extend past end_offset,
+        # so callers never strip more bytes than the gap actually holds.
+        if offset + entry_size > end_offset:
+            return None
+
+        return entry_size
 
     def _read_local_file_header(self, fp):
         fheader = fp.read(sizeFileHeader)
@@ -446,7 +457,8 @@ class _ZipRepacker:
 
         return None
 
-    def _scan_data_descriptor_no_sig(self, fp, offset, end_offset, zip64, chunk_size=8192):
+    def _scan_data_descriptor_no_sig(self, fp, offset, end_offset, zip64,
+                                     chunk_size=io.DEFAULT_BUFFER_SIZE):
         dd_fmt = '<LQQ' if zip64 else '<LLL'
         dd_size = struct.calcsize(dd_fmt)
 
@@ -461,10 +473,7 @@ class _ZipRepacker:
             mv = memoryview(chunk)
             for i in range(len(chunk) - dd_size + 1):
                 dd = mv[i:i + dd_size]
-                try:
-                    crc, compress_size, file_size = struct.unpack(dd_fmt, dd)
-                except struct.error:
-                    continue
+                crc, compress_size, file_size = struct.unpack(dd_fmt, dd)
                 if delta + i != compress_size:
                     continue
 
@@ -556,6 +565,11 @@ class _ZipRepacker:
         while read_size < size:
             fp.seek(old_offset + read_size)
             data = fp.read(min(size - read_size, self.chunk_size))
+            if not data:
+                raise BadZipFile(
+                    "Truncated data while repacking "
+                    f"(expected {size} bytes at offset {old_offset})"
+                )
             fp.seek(new_offset + read_size)
             fp.write(data)
             fp.flush()
@@ -637,11 +651,12 @@ class ZipFile(ZipFile):
 
         return zinfo
 
-    def repack(self, removed=None, **opts):
+    def repack(self, removed=None, *, strict_descriptor=True,
+               chunk_size=_REPACK_CHUNK_SIZE):
         """Repack a zip file, removing non-referenced file entries.
 
         The archive must be opened with mode 'a', as mode 'w'/'x' do not
-        truncate the file when closed. This cannot be simplely changed as
+        truncate the file when closed. This cannot be simply changed as
         they may be used on an unseekable file buffer, which disallows
         truncation."""
         if self.mode != 'a':
@@ -657,6 +672,10 @@ class ZipFile(ZipFile):
         with self._lock:
             self._writing = True
             try:
-                _ZipRepacker(**opts).repack(self, removed)
+                repacker = _ZipRepacker(
+                    strict_descriptor=strict_descriptor,
+                    chunk_size=chunk_size,
+                )
+                repacker.repack(self, removed)
             finally:
                 self._writing = False
