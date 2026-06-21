@@ -13,10 +13,9 @@ This package extends `zipfile` with `remove`-related functionalities.
 
    Removes a member entry from the archive's central directory.
    *zinfo_or_arcname* may be the full path of the member or a `ZipInfo`
-   instance.  If multiple members share the same full path and the path is
-   given as a string, only one of them is removed and which one is
-   unspecified; it should not be relied upon.  Pass the specific
-   `ZipInfo` instance to remove a particular member.
+   instance.  If multiple members share the same path and a string is
+   provided, only one unspecified entry is removed; pass a specific
+   `ZipInfo` instance to guarantee which is removed.
 
    The archive must be opened with mode ``'w'``, ``'x'`` or ``'a'``.
 
@@ -28,10 +27,9 @@ This package extends `zipfile` with `remove`-related functionalities.
    > This method only removes the member's entry from the central directory,
    > making it inaccessible to most tools.  The member's local file entry,
    > including content and metadata, remains in the archive and is still
-   > recoverable using forensic tools.  Call `repack` afterwards to remove the
-   > local file entry and reclaim space; pass the returned `ZipInfo` to
-   > `repack` to ensure the data is removed regardless of how the entry was
-   > written.
+   > forensically recoverable.  To completely delete the data and reclaim
+   > space, call `repack` afterwards (preferably passing the returned `ZipInfo`
+   > instance).
 
 * `ZipFile.repack(removed=None, *, strict_descriptor=True[, chunk_size])`
 
@@ -40,35 +38,29 @@ This package extends `zipfile` with `remove`-related functionalities.
 
    If *removed* is provided, it must be a sequence of `ZipInfo` objects
    representing the recently removed members, and only their corresponding
-   local file entries will be removed.  Otherwise, the archive is scanned to
-   locate and remove local file entries that are no longer referenced in the
-   central directory.
-
-   Passing *removed* is the most reliable way to reclaim space: the
-   corresponding local file entries are located directly from the central
-   directory and removed regardless of how they were written, whereas the scan
-   used when *removed* is omitted may leave some entries in place (see
-   *strict_descriptor* below).  To remove members and reclaim their space in a
-   single step:
+   local file entries will be removed.  This is the most efficient and reliable
+   way to reclaim space.  For example:
 
    ```python
-    with ZipFile('spam.zip', 'a') as myzip:
-        removed = [myzip.remove(name) for name in ('ham.txt', 'eggs.txt')]
-        myzip.repack(removed)
+   with ZipFile('spam.zip', 'a') as myzip:
+       removed = [myzip.remove(name) for name in ('ham.txt', 'eggs.txt')]
+       myzip.repack(removed)
    ```
+
+   If *removed* is omitted, the archive is scanned to locate and remove local
+   file entries that are no longer referenced in the central directory.
 
    When scanning, *strict_descriptor* controls how entries written with an
    unsigned *data descriptor* are handled.  A data descriptor is an optional
-   record holding an entry's CRC and sizes, stored just after the entry's data;
-   it is used when the archive is written to a non-seekable stream, and is
-   *signed* when it begins with a marker signature or *unsigned* otherwise.
+   record holding an entry's CRC and sizes, stored just after the entry's
+   data; it is used when the archive is written to a non-seekable stream, and
+   is *signed* when it begins with a marker signature or *unsigned* otherwise.
    Unsigned descriptors have been deprecated by the [PKZIP Application Note]
    since version 6.3.0 (released in 2006) and are written only by some legacy
-   tools; signed descriptors—written by Python and other modern tools—are always
-   detected.  When *strict_descriptor* is true (the default), only signed data
-   descriptors are detected, so an unreferenced entry written with an unsigned
-   descriptor is not located and its space is not reclaimed by the scan.
-   Setting ``strict_descriptor=False`` additionally detects unsigned
+   tools; signed descriptors—written by Python and other modern tools—are
+   always detected.  When *strict_descriptor* is true (the default), unsigned
+   descriptors are not detected, and related unreferenced entries are not
+   removed.  Setting `strict_descriptor=False` additionally detects unsigned
    descriptors, at the cost of a significantly slower scan—around 100 to 1000
    times in the worst case—which may be exploitable as a denial-of-service
    vector on untrusted input.  This does not affect entries without a data
@@ -108,6 +100,17 @@ This package extends `zipfile` with `remove`-related functionalities.
 
    Calling `copy` on a closed ZipFile will raise a `ValueError`.
 
+   > **Note:** 
+   > Renaming a member in a ZIP file requires rewriting its data, as the
+   > filename is stored within its local file entry.
+   >
+   > To rename a member and reclaim the space occupied by the old entry,
+   > combine `copy`, `remove`, and `repack` like:
+   >
+   > ```python
+   > with ZipFile('spam.zip', 'a') as myzip:
+   >     myzip.repack([myzip.remove(myzip.copy('old.txt', 'new.txt'))])
+   > ```
 
 ## Examples
 
@@ -162,10 +165,6 @@ print(os.path.getsize('archive.zip'))  # 116 (would be 245 without `repack`)
 ```
 
 ### Move entries under a folder and reclaim space
-
-Moving entries in a ZIP file must be done as a combination of `copy`, `remove`,
-and optionally `repack`, because every local file entry contains the filename
-and requires rewriting.
 
 ```python
 import os
