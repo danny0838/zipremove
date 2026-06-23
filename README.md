@@ -15,7 +15,7 @@ This package extends `zipfile` with `remove`-related functionalities.
    *zinfo_or_arcname* may be the full path of the member or a `ZipInfo`
    instance.  If multiple members share the same path and a string is
    provided, only one unspecified entry is removed; pass a specific
-   `ZipInfo` instance to guarantee which is removed.
+   `ZipInfo` instance to guarantee which member is removed.
 
    The archive must be opened with mode ``'w'``, ``'x'`` or ``'a'``.
 
@@ -39,7 +39,7 @@ This package extends `zipfile` with `remove`-related functionalities.
    If *removed* is provided, it must be a sequence of `ZipInfo` objects
    representing the recently removed members, and only their corresponding
    local file entries will be removed.  This is the most efficient and reliable
-   way to reclaim space.  For example:
+   way to reclaim space.  A brief example looks like:
 
    ```python
    with ZipFile('spam.zip', 'a') as myzip:
@@ -50,21 +50,21 @@ This package extends `zipfile` with `remove`-related functionalities.
    If *removed* is omitted, the archive is scanned to locate and remove local
    file entries that are no longer referenced in the central directory.
 
-   When scanning, *strict_descriptor* controls how entries written with an
-   unsigned *data descriptor* are handled.  A data descriptor is an optional
-   record holding an entry's CRC and sizes, stored just after the entry's
-   data; it is used when the archive is written to a non-seekable stream, and
-   is *signed* when it begins with a marker signature or *unsigned* otherwise.
+   When scanning, *strict_descriptor* controls how entries with an unsigned
+   data descriptor are handled.  A data descriptor is an optional record
+   (mostly used for non-seekable streaming) stored after an entry's data, and
+   can be either signed (beginning with a magic signature) or unsigned.
    Unsigned descriptors have been deprecated by the [PKZIP Application Note]
-   since version 6.3.0 (released in 2006) and are written only by some legacy
-   tools; signed descriptors—written by Python and other modern tools—are
-   always detected.  When *strict_descriptor* is true (the default), unsigned
-   descriptors are not detected, and related unreferenced entries are not
-   removed.  Setting `strict_descriptor=False` additionally detects unsigned
-   descriptors, at the cost of a significantly slower scan—around 100 to 1000
-   times in the worst case—which may be exploitable as a denial-of-service
-   vector on untrusted input.  This does not affect entries without a data
-   descriptor, and is not needed when *removed* is provided.
+   since version 6.3.0 (released in 2006) and are rarely produced by modern
+   tools.
+
+   When *strict_descriptor* is true (the default), unsigned descriptors are
+   not detectable, and unreferenced entries using them are not recognized and
+   their space is not reclaimed.  Setting `strict_descriptor=False` allows
+   such entries to be properly handled, at the cost of a significantly slower
+   scan—around 100 to 1000 times in the worst case—which may be exploitable
+   as a denial-of-service vector on untrusted input.  Entries without a
+   descriptor or with a signed descriptor are unaffected.
 
    *chunk_size* may be specified to control the buffer size when moving
    entry data (default is 1 MiB).
