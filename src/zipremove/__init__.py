@@ -25,6 +25,19 @@ from zipfile import (
 
 # polyfills
 try:
+    from zipfile import _read_local_file_header
+except ImportError:
+    # polyfill for Python < 3.16
+    def _read_local_file_header(fp):
+        fheader = fp.read(sizeFileHeader)
+        if len(fheader) != sizeFileHeader:
+            raise BadZipFile("Truncated file header")
+        fheader = struct.unpack(structFileHeader, fheader)
+        if fheader[_FH_SIGNATURE] != stringFileHeader:
+            raise BadZipFile("Bad magic number for file header")
+        return fheader
+
+try:
     ZIP_ZSTANDARD
 except NameError:
     # polyfill for Python < 3.14
@@ -355,7 +368,7 @@ class _ZipRepacker:
     def _validate_local_file_entry(self, fp, offset, end_offset):
         fp.seek(offset)
         try:
-            fheader = self._read_local_file_header(fp)
+            fheader = _read_local_file_header(fp)
         except BadZipFile:
             return None
 
@@ -424,15 +437,6 @@ class _ZipRepacker:
             return None
 
         return entry_size
-
-    def _read_local_file_header(self, fp):
-        fheader = fp.read(sizeFileHeader)
-        if len(fheader) != sizeFileHeader:
-            raise BadZipFile("Truncated file header")
-        fheader = struct.unpack(structFileHeader, fheader)
-        if fheader[_FH_SIGNATURE] != stringFileHeader:
-            raise BadZipFile("Bad magic number for file header")
-        return fheader
 
     def _scan_data_descriptor(self, fp, offset, end_offset, zip64):
         dd_fmt = '<LLQQ' if zip64 else '<LLLL'
@@ -536,7 +540,7 @@ class _ZipRepacker:
 
     def _calc_local_file_entry_size(self, fp, zinfo):
         fp.seek(zinfo.header_offset)
-        fheader = self._read_local_file_header(fp)
+        fheader = _read_local_file_header(fp)
 
         if zinfo.flag_bits & _MASK_USE_DATA_DESCRIPTOR:
             zip64 = fheader[_FH_UNCOMPRESSED_SIZE] == 0xffffffff
