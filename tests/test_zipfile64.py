@@ -154,6 +154,19 @@ class TestRepacker(unittest.TestCase):
                 zh.repack(strict_descriptor=False)
                 self.assertIsNone(zh.testzip())
 
+    def test_copy(self):
+        """Should copy the physical data of a file without causing a memory
+        issue."""
+        with TemporaryFile() as f:
+            with zipfile.ZipFile(f, 'w') as zh:
+                with zh.open(self.largefilename, 'w', force_zip64=True) as fh:
+                    self._write_large_file(fh)
+
+            with self.assert_memory_usage(self.allowed_memory), \
+                 zipfile.ZipFile(f, 'a') as zh:
+                zh.copy(self.largefilename, self.filename)
+                self.assertIsNone(zh.testzip())
+
 
 if __name__ == "__main__":
     unittest.main()
