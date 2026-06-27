@@ -577,7 +577,7 @@ class _ZipRepacker:
 
 
 class ZipFile(ZipFile):
-    def copy(self, zinfo_or_arcname, filename, *, chunk_size=2**20):
+    def copy(self, zinfo_or_arcname, filename, *, chunk_size=_REPACK_CHUNK_SIZE):
         """Copy a member in the archive."""
         if self.mode not in ('w', 'x', 'a'):
             raise ValueError("copy() requires mode 'w', 'x', or 'a'")
