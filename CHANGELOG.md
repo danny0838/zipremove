@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.8.2] - 2026-06-28
+* Fixed an unexpected testing failure.
+* Miscellaneous improvements to the internal code, dev tools, and documentation.
+
 ## [0.8.1] - 2026-06-21
 * Miscellaneous improvements to the internal code, test suite, dev tools, and documentation.
 
