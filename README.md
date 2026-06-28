@@ -155,7 +155,7 @@ with ZipFile('archive.zip', 'w') as zh:
 print(os.path.getsize('archive.zip'))  # 398
 
 with ZipFile('archive.zip', 'a') as zh:
-    # A generator expression won't work here since a `remove` cannot be run
+    # A generator expression doesn't work here since a `remove` cannot run
     # during a `repack` due to writing protection and thread lock.
     zh.repack([zh.remove(fn) for fn in (
         'file1',
@@ -210,7 +210,7 @@ print(os.path.getsize('archive.zip'))  # 446
 
 with ZipFile('archive.zip', 'a') as zh:
     fsrc, fdst = 'folder1/', 'folder2/'
-    # A generator expression won't work here since a `remove` cannot be run
+    # A generator expression doesn't work here since a `remove` cannot run
     # during a `repack` due to writing protection and thread lock.
     zh.repack([
         zh.remove(zh.copy(fn, fdst + fn[len(fsrc):]))
