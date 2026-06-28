@@ -5,7 +5,7 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/zipremove?period=month&left_text=Downloads)](https://pepy.tech/project/zipremove)
 [![Pull request](https://img.shields.io/github/pulls/detail/state/python/cpython/134627)](https://github.com/python/cpython/pull/134627)
 
-This package extends `zipfile.ZipFile` with `remove`-related functionalities.
+This package extends `zipfile.ZipFile` with remove-related capabilities.
 
 ## API
 
