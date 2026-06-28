@@ -139,8 +139,8 @@ with ZipFile('archive.zip', 'a') as zh:
 print(os.path.getsize('archive.zip'))  # 116 (would be 245 without `repack`)
 ```
 
-Alternatively, pass the ZipInfo objects of the removed entries, for better
-performance and error-proofing:
+Alternatively, pass the ZipInfo objects of the removed entries, which is
+*highly recommended* due to better performance and error-proofing:
 
 ```python
 import os
@@ -155,16 +155,21 @@ with ZipFile('archive.zip', 'w') as zh:
 print(os.path.getsize('archive.zip'))  # 398
 
 with ZipFile('archive.zip', 'a') as zh:
-    zinfos = []
-    zinfos.append(zh.remove('file1'))
-    zinfos.append(zh.remove('file2'))
-    zinfos.append(zh.remove('file3'))
-    zh.repack(zinfos)
+    # A generator expression won't work here since a `remove` cannot be run
+    # during a `repack` due to writing protection and thread lock.
+    zh.repack([zh.remove(fn) for fn in (
+        'file1',
+        'file2',
+        'file3',
+    )])
 
 print(os.path.getsize('archive.zip'))  # 116 (would be 245 without `repack`)
 ```
 
 ### Move entries under a folder and reclaim space
+
+Moving an entry can be done as a combination of `copy`, `remove`, and
+`repack`:
 
 ```python
 import os
@@ -179,17 +184,16 @@ with ZipFile('archive.zip', 'w') as zh:
 print(os.path.getsize('archive.zip'))  # 446
 
 with ZipFile('archive.zip', 'a') as zh:
-    for n in zh.namelist():
-        if n.startswith('folder1/'):
-            n2 = 'folder2/' + n[len('folder1/'):]
-            zh.copy(n, n2)
-            zh.remove(n)
+    fsrc, fdst = 'folder1/', 'folder2/'
+    for fn in zh.namelist():
+        if fn.startswith(fsrc):
+            zh.remove(zh.copy(fn, fdst + fn[len(fsrc):]))
     zh.repack()
 
 print(os.path.getsize('archive.zip'))  # 446 (would be 599 without `repack`)
 ```
 
-Similarly, pass the ZipInfo objects of the copied/removed entries for better
+Similarly, pass the ZipInfo objects of the removed entries for better
 performance and error-proofing:
 
 ```python
@@ -205,12 +209,14 @@ with ZipFile('archive.zip', 'w') as zh:
 print(os.path.getsize('archive.zip'))  # 446
 
 with ZipFile('archive.zip', 'a') as zh:
-    zinfos = []
-    for n in zh.namelist():
-        if n.startswith('folder1/'):
-            n2 = 'folder2/' + n[len('folder1/'):]
-            zinfos.append(zh.remove(zh.copy(n, n2)))
-    zh.repack(zinfos)
+    fsrc, fdst = 'folder1/', 'folder2/'
+    # A generator expression won't work here since a `remove` cannot be run
+    # during a `repack` due to writing protection and thread lock.
+    zh.repack([
+        zh.remove(zh.copy(fn, fdst + fn[len(fsrc):]))
+        for fn in zh.namelist()
+        if fn.startswith(fsrc)
+    ])
 
 print(os.path.getsize('archive.zip'))  # 446 (would be 599 without `repack`)
 ```
