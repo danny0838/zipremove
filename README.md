@@ -5,7 +5,7 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/zipremove?period=month&left_text=Downloads)](https://pepy.tech/project/zipremove)
 [![Pull request](https://img.shields.io/github/pulls/detail/state/python/cpython/134627)](https://github.com/python/cpython/pull/134627)
 
-This package extends `zipfile` with `remove`-related functionalities.
+This package extends `zipfile.ZipFile` with `remove`-related functionalities.
 
 ## API
 
@@ -120,9 +120,9 @@ Call `repack` after `remove`s to reclaim the space of the removed entries:
 
 ```python
 import os
-import zipremove as zipfile
+from zipremove import ZipFile
 
-with zipfile.ZipFile('archive.zip', 'w') as zh:
+with ZipFile('archive.zip', 'w') as zh:
     zh.writestr('file1', 'content1')
     zh.writestr('file2', 'content2')
     zh.writestr('file3', 'content3')
@@ -130,7 +130,7 @@ with zipfile.ZipFile('archive.zip', 'w') as zh:
 
 print(os.path.getsize('archive.zip'))  # 398
 
-with zipfile.ZipFile('archive.zip', 'a') as zh:
+with ZipFile('archive.zip', 'a') as zh:
     zh.remove('file1')
     zh.remove('file2')
     zh.remove('file3')
@@ -144,9 +144,9 @@ performance and error-proofing:
 
 ```python
 import os
-import zipremove as zipfile
+from zipremove import ZipFile
 
-with zipfile.ZipFile('archive.zip', 'w') as zh:
+with ZipFile('archive.zip', 'w') as zh:
     zh.writestr('file1', 'content1')
     zh.writestr('file2', 'content2')
     zh.writestr('file3', 'content3')
@@ -154,7 +154,7 @@ with zipfile.ZipFile('archive.zip', 'w') as zh:
 
 print(os.path.getsize('archive.zip'))  # 398
 
-with zipfile.ZipFile('archive.zip', 'a') as zh:
+with ZipFile('archive.zip', 'a') as zh:
     zinfos = []
     zinfos.append(zh.remove('file1'))
     zinfos.append(zh.remove('file2'))
@@ -168,9 +168,9 @@ print(os.path.getsize('archive.zip'))  # 116 (would be 245 without `repack`)
 
 ```python
 import os
-import zipremove as zipfile
+from zipremove import ZipFile
 
-with zipfile.ZipFile('archive.zip', 'w') as zh:
+with ZipFile('archive.zip', 'w') as zh:
     zh.writestr('file0', 'content0')
     zh.writestr('folder1/file1', 'content1')
     zh.writestr('folder1/file2', 'content2')
@@ -178,7 +178,7 @@ with zipfile.ZipFile('archive.zip', 'w') as zh:
 
 print(os.path.getsize('archive.zip'))  # 446
 
-with zipfile.ZipFile('archive.zip', 'a') as zh:
+with ZipFile('archive.zip', 'a') as zh:
     for n in zh.namelist():
         if n.startswith('folder1/'):
             n2 = 'folder2/' + n[len('folder1/'):]
@@ -194,9 +194,9 @@ performance and error-proofing:
 
 ```python
 import os
-import zipremove as zipfile
+from zipremove import ZipFile
 
-with zipfile.ZipFile('archive.zip', 'w') as zh:
+with ZipFile('archive.zip', 'w') as zh:
     zh.writestr('file0', 'content0')
     zh.writestr('folder1/file1', 'content1')
     zh.writestr('folder1/file2', 'content2')
@@ -204,7 +204,7 @@ with zipfile.ZipFile('archive.zip', 'w') as zh:
 
 print(os.path.getsize('archive.zip'))  # 446
 
-with zipfile.ZipFile('archive.zip', 'a') as zh:
+with ZipFile('archive.zip', 'a') as zh:
     zinfos = []
     for n in zh.namelist():
         if n.startswith('folder1/'):
