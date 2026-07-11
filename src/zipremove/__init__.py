@@ -80,6 +80,7 @@ except AttributeError:
         except AttributeError:
             return b''
     LZMADecompressor.unused_data = unused_data
+    del unused_data
 
 
 _REPACK_CHUNK_SIZE = 2**20
