@@ -1,7 +1,5 @@
 .gitattributes text
 .gitignore text
-*.cfg text
-*.ini text
 *.md text
 *.py text
 *.toml text
