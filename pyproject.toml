@@ -79,7 +79,7 @@ include_trailing_comma = true
 # extend_skip = []
 
 [tool.tox]
-env_list = ["py314", "py313", "py312", "py311", "py310", "py39"]
+env_list = ["py315", "py314", "py313", "py312", "py311", "py310", "py39"]
 min_version = "4.22"
 
 [tool.tox.env_run_base]
