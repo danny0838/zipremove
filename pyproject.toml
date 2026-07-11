@@ -1,15 +1,19 @@
 [build-system]
-requires = ["setuptools>=77.0.3", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "zipremove"
 version = "0.8.2"
-requires-python = "~=3.9"
+requires-python = "~=3.8"
 description = "Extend `zipfile.ZipFile` with remove-related capabilities"
 readme = "README.md"
-license = "MIT"
-license-files = ["LICENSE.*"]
+
+# Use dynamic license (and provide it in setup.py) since the format introduced
+# by PEP 639 requires setuptools>=77.0.3, which does not support Python 3.8.
+# ref: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license
+dynamic = ["license"]
+
 authors = [
     {name = "Danny Lin", email = "danny0838@gmail.com"},
 ]
@@ -19,6 +23,7 @@ classifiers = [
     "Topic :: System :: Archiving :: Compression",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -79,7 +84,7 @@ include_trailing_comma = true
 # extend_skip = []
 
 [tool.tox]
-env_list = ["py315", "py314", "py313", "py312", "py311", "py310", "py39"]
+env_list = ["py315", "py314", "py313", "py312", "py311", "py310", "py39", "py38"]
 min_version = "4.22"
 
 [tool.tox.env_run_base]

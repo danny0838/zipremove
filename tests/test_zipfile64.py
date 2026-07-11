@@ -9,14 +9,8 @@ from test.test_zipfile64 import _PRINT_WORKING_MSG_INTERVAL
 
 import zipremove as zipfile
 
-from .test_zipfile import struct_pack_no_dd_sig
+from .test_zipfile import Unseekable, requires_zlib, struct_pack_no_dd_sig
 
-# polyfills
-try:
-    from test.test_zipfile.test_core import Unseekable, requires_zlib
-except ImportError:
-    # polyfill for Python < 3.12
-    from test.test_zipfile import Unseekable, requires_zlib
 
 def requires_resource(res):
     if not hasattr(requires_resource, '_resources'):

@@ -1,7 +1,9 @@
 import copy
+import functools
 import io
 import os
 import struct
+import sys
 from zipfile import *  # noqa: F403
 from zipfile import __all__  # noqa: F401
 from zipfile import _get_compressor  # noqa: F401
@@ -68,6 +70,39 @@ except ImportError:
         if os.altsep and os.altsep != "/" and os.altsep in filename:
             filename = filename.replace(os.altsep, "/")
         return filename
+
+try:
+    ZipInfo().file_size
+except AttributeError:
+    # polyfill for Python < 3.9
+    def _polyfill():
+        _zinfo_init = ZipInfo.__init__
+
+        @functools.wraps(_zinfo_init)
+        def __init__(self, *args, **kwargs):
+            _zinfo_init(self, *args, **kwargs)
+            self.compress_size = 0
+            self.file_size = 0
+
+        ZipInfo.__init__ = __init__
+    _polyfill()
+    del _polyfill
+
+if sys.version_info < (3, 8, 7):
+    # polyfill for Python < 3.8.7
+    def _polyfill():
+        _zfile_write_end_record = ZipFile._write_end_record
+
+        @functools.wraps(_zfile_write_end_record)
+        def _write_end_record(self):
+            _zfile_write_end_record(self)
+            if self.mode == "a":
+                self.fp.truncate()
+                self.fp.flush()
+
+        ZipFile._write_end_record = _write_end_record
+    _polyfill()
+    del _polyfill
 
 try:
     LZMADecompressor().unused_data

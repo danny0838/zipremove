@@ -32,6 +32,29 @@ except ImportError:
         unlink,
     )
 
+    # polyfill for Python < 3.9
+    if sys.version_info < (3, 9):
+        def requires_zlib(reason='requires zlib'):  # noqa: F811
+            try:
+                import zlib
+            except ImportError:
+                zlib = None
+            return unittest.skipUnless(zlib, reason)
+
+        def requires_bz2(reason='requires bz2'):  # noqa: F811
+            try:
+                import bz2
+            except ImportError:
+                bz2 = None
+            return unittest.skipUnless(bz2, reason)
+
+        def requires_lzma(reason='requires lzma'):  # noqa: F811
+            try:
+                import lzma
+            except ImportError:
+                lzma = None
+            return unittest.skipUnless(lzma, reason)
+
 try:
     from test.test_zipfile.test_core import requires_zstd
 except ImportError:
