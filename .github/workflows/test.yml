@@ -78,4 +78,4 @@ jobs:
       - name: Run tests
         env:
           TEST_RESOURCES: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.resources || '' }}
-        run: python -m unittest
+        run: python -m unittest -v
