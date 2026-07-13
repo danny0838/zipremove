@@ -3,7 +3,6 @@ import functools
 import io
 import os
 import struct
-import sys
 from zipfile import *  # noqa: F403
 from zipfile import __all__  # noqa: F401
 from zipfile import _get_compressor  # noqa: F401
@@ -26,19 +25,6 @@ from zipfile import (
 )
 
 # polyfills
-try:
-    from zipfile import _read_local_file_header
-except ImportError:
-    # polyfill for Python < 3.16
-    def _read_local_file_header(fp):
-        fheader = fp.read(sizeFileHeader)
-        if len(fheader) != sizeFileHeader:
-            raise BadZipFile("Truncated file header")
-        fheader = struct.unpack(structFileHeader, fheader)
-        if fheader[_FH_SIGNATURE] != stringFileHeader:
-            raise BadZipFile("Bad magic number for file header")
-        return fheader
-
 try:
     ZIP_ZSTANDARD
 except NameError:
@@ -72,6 +58,19 @@ except ImportError:
         return filename
 
 try:
+    from zipfile import _read_local_file_header
+except ImportError:
+    # polyfill for Python < 3.16
+    def _read_local_file_header(fp):
+        fheader = fp.read(sizeFileHeader)
+        if len(fheader) != sizeFileHeader:
+            raise BadZipFile("Truncated file header")
+        fheader = struct.unpack(structFileHeader, fheader)
+        if fheader[_FH_SIGNATURE] != stringFileHeader:
+            raise BadZipFile("Bad magic number for file header")
+        return fheader
+
+try:
     ZipInfo().file_size
 except AttributeError:
     # polyfill for Python < 3.9
@@ -88,7 +87,21 @@ except AttributeError:
     _polyfill()
     del _polyfill
 
-if sys.version_info < (3, 8, 7):
+try:
+    def _test_append_truncation():
+        fh = io.BytesIO()
+        with ZipFile(fh, 'w') as zh:
+            zh.writestr('a', b'')
+        fh.seek(0, 2)
+        before = fh.tell()
+        with ZipFile(fh, 'a') as zh:
+            zh.filelist[:] = []
+            zh.comment = b''
+        fh.seek(0, 2)
+        after = fh.tell()
+        assert after < before
+    _test_append_truncation()
+except AssertionError:
     # polyfill for Python < 3.8.7
     def _polyfill():
         _zfile_write_end_record = ZipFile._write_end_record
@@ -103,11 +116,13 @@ if sys.version_info < (3, 8, 7):
         ZipFile._write_end_record = _write_end_record
     _polyfill()
     del _polyfill
+finally:
+    del _test_append_truncation
 
 try:
     LZMADecompressor().unused_data
 except AttributeError:
-    # polyfill to support LZMADecompressor().unused_data
+    # polyfill for Python < 3.16
     @property
     def unused_data(self):
         try:
