@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.9.2] - 2026-07-14
+* Improved polyfills.
+* Miscellaneous improvements to the internal code, dev tools, and documentation.
+
 ## [0.9.1] - 2026-07-11
 * Added support for Python 3.7 and 3.8.
 * Miscellaneous improvements to the internal code, test suite, dev tools, and documentation.
