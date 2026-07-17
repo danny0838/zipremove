@@ -631,7 +631,15 @@ class _ZipRepacker:
             read_size += len(data)
 
 
-class ZipFile(ZipFile):
+try:
+    ZipFile.copy
+    ZipFile.remove
+    ZipFile.repack
+except AttributeError:
+    # polyfill for Python < 3.16(?)
+    # (polyfill all methods if any is missing)
+    _copy = copy
+
     def copy(self, zinfo_or_arcname, filename, *, chunk_size=_REPACK_CHUNK_SIZE):
         """Copy a member in the archive."""
         if self.mode not in ('w', 'x', 'a'):
@@ -734,3 +742,13 @@ class ZipFile(ZipFile):
                 repacker.repack(self, removed)
             finally:
                 self._writing = False
+
+    ZipFile.copy = copy
+    copy = _copy
+    del _copy
+
+    ZipFile.remove = remove
+    del remove
+
+    ZipFile.repack = repack
+    del repack

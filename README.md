@@ -5,7 +5,37 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/zipremove?period=month&left_text=Downloads)](https://pepy.tech/project/zipremove)
 [![Pull request](https://img.shields.io/github/pulls/detail/state/python/cpython/134627)](https://github.com/python/cpython/pull/134627)
 
-This package provides an extended `zipfile.ZipFile` with remove-related capabilities.
+This package extends native `zipfile` with remove-related capabilities.
+
+## Usage
+
+* Install this package:
+
+  ```sh
+  pip install zipremove
+  ```
+
+* Import and use it as a drop-in replacement for the native `zipfile` module:
+
+  ```python
+  import zipremove as zipfile
+
+  with zipfile.ZipFile('archive', 'a') as fh:
+      fh.remove('subfile')
+  ```
+
+* Alternatively, this package automatically monkeypatches the native `zipfile`
+  module upon import.  The extended features will become available globally on
+  the built-in `zipfile` classes:
+
+  ```python
+  from zipfile import ZipFile
+
+  import zipremove as _
+
+  with ZipFile('archive', 'a') as fh:
+      fh.remove('subfile')
+  ```
 
 ## API
 

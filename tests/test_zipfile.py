@@ -62,6 +62,9 @@ except ImportError:
     def requires_zstd(reason='requires zstd'):
         return unittest.skip(reason)
 
+def require_patched_repack(reason='ZipFile.repack is native'):
+    return unittest.skipIf(zipfile.ZipFile.repack.__module__ == 'zipfile', reason)
+
 def requires_zip64fix(reason='requires Python >= 3.11.4 for zip64 fix (#103861)'):
     return unittest.skipUnless(sys.version_info >= (3, 11, 4), reason)
 
@@ -112,6 +115,7 @@ class RepackHelperMixin:
                     fh.write(data)
             return list(zh.infolist())
 
+@require_patched_repack()
 class AbstractCopyTests(RepackHelperMixin):
     @classmethod
     def setUpClass(cls):
@@ -395,6 +399,7 @@ class LzmaCopyTests(AbstractCopyTests, unittest.TestCase):
 class ZstdCopyTests(AbstractCopyTests, unittest.TestCase):
     compression = zipfile.ZIP_ZSTANDARD
 
+@require_patched_repack()
 class AbstractRemoveTests(RepackHelperMixin):
     @classmethod
     def setUpClass(cls):
@@ -694,6 +699,7 @@ class LzmaRemoveTests(AbstractRemoveTests, unittest.TestCase):
 class ZstdRemoveTests(AbstractRemoveTests, unittest.TestCase):
     compression = zipfile.ZIP_ZSTANDARD
 
+@require_patched_repack()
 class AbstractRepackTests(RepackHelperMixin):
     @classmethod
     def setUpClass(cls):
@@ -1329,6 +1335,7 @@ class LzmaRepackTests(AbstractRepackTests, unittest.TestCase):
 class ZstdRepackTests(AbstractRepackTests, unittest.TestCase):
     compression = zipfile.ZIP_ZSTANDARD
 
+@require_patched_repack()
 class OtherRepackTests(unittest.TestCase):
     def test_full_overlap_different_names(self):
         # see `test_full_overlap_different_names` in built-in test.test_zipfile

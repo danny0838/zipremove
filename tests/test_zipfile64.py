@@ -10,7 +10,12 @@ from test.test_zipfile64 import _PRINT_WORKING_MSG_INTERVAL
 
 import zipremove as zipfile
 
-from .test_zipfile import Unseekable, requires_zlib, struct_pack_no_dd_sig
+from .test_zipfile import (
+    Unseekable,
+    require_patched_repack,
+    requires_zlib,
+    struct_pack_no_dd_sig,
+)
 
 
 def requires_resource(res):
@@ -26,6 +31,7 @@ def setUpModule():
     pass
 
 
+@require_patched_repack()
 class TestRepacker(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

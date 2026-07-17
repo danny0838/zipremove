@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "zipremove"
 version = "0.9.2"
 requires-python = "~=3.7"
-description = "Provide an extended `zipfile.ZipFile` with remove-related capabilities"
+description = "Extend `zipfile` with remove-related capabilities"
 readme = "README.md"
 
 # Use dynamic license (and provide it in setup.py) since the format introduced
