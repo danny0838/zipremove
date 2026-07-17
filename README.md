@@ -3,9 +3,17 @@
 ![Status](https://img.shields.io/pypi/status/zipremove)
 ![License](https://img.shields.io/github/license/danny0838/zipremove)
 [![Downloads](https://static.pepy.tech/personalized-badge/zipremove?period=month&left_text=Downloads)](https://pepy.tech/project/zipremove)
-[![Pull request](https://img.shields.io/github/pulls/detail/state/python/cpython/134627)](https://github.com/python/cpython/pull/134627)
 
-This package extends native `zipfile` with remove-related capabilities.
+[![Pull request](https://img.shields.io/github/pulls/detail/state/python/cpython/134627)](https://github.com/python/cpython/pull/134627)
+[![Pull request](https://img.shields.io/github/pulls/detail/state/python/cpython/151932)](https://github.com/python/cpython/pull/151932)
+[![Pull request](https://img.shields.io/github/pulls/detail/state/python/cpython/152138)](https://github.com/python/cpython/pull/152138)
+[![Pull request](https://img.shields.io/github/pulls/detail/state/python/cpython/152203)](https://github.com/python/cpython/pull/152203)
+[![Pull request](https://img.shields.io/github/pulls/detail/state/python/cpython/151825)](https://github.com/python/cpython/pull/151825)
+
+This package extends the native `zipfile` module with remove-related
+capabilities. The same codebase is currently being integrated into the CPython
+standard library and is scheduled to be available natively in Python 3.16. This
+package serves as a backport to support these future features today.
 
 ## Usage
 
