@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.10.0] - 2026-07-17
+* Reworked the package to allow using as a polyfill.
+* Miscellaneous improvements to the documentation and test suite.
+
 ## [0.9.2] - 2026-07-14
 * Improved polyfills.
 * Miscellaneous improvements to the internal code, dev tools, and documentation.
